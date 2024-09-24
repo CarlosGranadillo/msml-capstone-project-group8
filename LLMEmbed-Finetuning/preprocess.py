@@ -155,7 +155,7 @@ class Preprocess:
             print(f"\t[Started] - Null rows removal for {dataset_name}.")
             column_names = dataset["train"].column_names
             print(f"\t\tNo.of rows in {dataset_name} : {len(dataset['train'])}")
-            filtered_dataset = dataset['train'].filter(
+            filtered_dataset = dataset["train"].filter(
                 lambda example: all(
                     example[col] is not None
                     and not (isinstance(example[col], float) and np.isnan(example[col]))
@@ -164,7 +164,7 @@ class Preprocess:
             )
             no_of_null_rows = len(dataset["train"]) - len(filtered_dataset)
             print(f"\t\tRemoved {no_of_null_rows} null rows in {dataset_name}")
-            datasets[dataset_name]['train'] = filtered_dataset
+            datasets[dataset_name]["train"] = filtered_dataset
             print(f"\t[Completed] - Null rows removal for {dataset_name}.")
         print("[Completed] - Remove null rows from the datasets.")
         return datasets
@@ -186,12 +186,14 @@ class Preprocess:
                 and not unique.add(tuple(example[col] for col in column_names))
             )
             no_of_duplicate_rows = len(dataset["train"]) - len(unique_dataset)
-            print(f"\t\tRemoved {no_of_duplicate_rows} duplicate rows in {dataset_name}")
-            datasets[dataset_name]['train'] = unique_dataset
+            print(
+                f"\t\tRemoved {no_of_duplicate_rows} duplicate rows in {dataset_name}"
+            )
+            datasets[dataset_name]["train"] = unique_dataset
             print(f"\t[Completed] - Duplicate rows removal for {dataset_name}.")
         print("[Completed] - Remove duplicate rows from the datasets.")
         return datasets
-    
+
     @classmethod
     def convert_string_labels_to_integers(cls, datasets) -> dict:
         """
