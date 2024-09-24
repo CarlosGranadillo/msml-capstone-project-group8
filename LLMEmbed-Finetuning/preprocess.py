@@ -42,7 +42,7 @@ class Preprocess:
         """
         cls.config = Config()
         cls.helpers = Helpers()
-        cls.datasets = {}
+        cls.temp_datasets = {}
         cls.datasets_df = {}
 
     @classmethod
@@ -65,7 +65,7 @@ class Preprocess:
         print(
             "\n[Started] - Convert the Sujet-Finance-Instruct-177k dataset to pandas dataframe."
         )
-        df["sujet_finance"] = cls.datasets["sujet_finance"]["train"].to_pandas()
+        df["sujet_finance"] = cls.temp_datasets["sujet_finance"]["train"].to_pandas()
         print(
             "[Completed] - Convert the Sujet-Finance-Instruct-177k dataset to pandas dataframe."
         )
@@ -199,7 +199,6 @@ class Preprocess:
         """
         This method converts the string lables in the sujet_finance dataset to integer labels.
         """
-        print(datasets)
         print(
             "\n[Started] - Convert the string labels to integers in the Sujet-Finance-Instruct-177k dataset."
         )
@@ -238,6 +237,30 @@ class Preprocess:
         return datasets
 
     @classmethod
+    def concatenate_sentimental_analysis_datasets(cls, datasets) -> dict:
+        """
+        This method will concatenate the datasets based on task types.
+        """
+        print(
+            "\n[Started] - Concatenation of setimental analysis and NER sentimental analysis into a single dataset."
+        )
+        sujet_finance_senti_df = datasets["sujet_finance_sentiment_analysis"][
+            "train"
+        ].to_pandas()
+        sujet_finance_ner_senti_df = datasets["sujet_finance_ner_sentiment_analysis"][
+            "train"
+        ].to_pandas()
+        sujet_finance_senti_temp = Dataset.from_pandas(sujet_finance_senti_df)
+        sujet_finance_ner_senti_temp = Dataset.from_pandas(sujet_finance_ner_senti_df)
+        datasets["sentimental_analysis"] = concatenate_datasets(
+            [sujet_finance_senti_temp, sujet_finance_ner_senti_temp]
+        )
+        print(
+            "[Completed] - Concatenation of setimental analysis and NER sentimental analysis into a single dataset."
+        )
+        return datasets
+
+    @classmethod
     def main(cls) -> dict:
         """
         This function in the starting point for the preprocessing of the datasets
@@ -245,34 +268,48 @@ class Preprocess:
         print("\n[Started] - Preprocessing the datasets.")
 
         # 1. Load the financial_phrasebank and Sujet-Finance-Instruct-177k from hugging face
-        cls.datasets = cls.load_datasets()
+        cls.temp_datasets = cls.load_datasets()
 
         ## Convert the datasets into pandas dataframe
         cls.datasets_df = cls.convert_to_pandas_df()
 
         # 2. Filter out the selected task types from the Sujet-Finance-Instruct-177k dataset.
-        cls.datasets["sujet_finance"] = cls.select_task_types_columns(
-            dataset=cls.datasets["sujet_finance"]
+        cls.temp_datasets["sujet_finance"] = cls.select_task_types_columns(
+            dataset=cls.temp_datasets["sujet_finance"]
         )
 
         # 3. Convert the labels, texts into lowercase in Sujet-Finance-Instruct-177k dataset
-        cls.datasets = cls.convert_lower_case(datasets=cls.datasets)
+        cls.temp_datasets = cls.convert_lower_case(datasets=cls.temp_datasets)
 
         # 4. Rename column names in Sujet-Finance-Instruct-177k dataset.
-        cls.datasets = cls.rename_column_names(datasets=cls.datasets)
+        cls.temp_datasets = cls.rename_column_names(datasets=cls.temp_datasets)
 
         # 5. Seggregate the Sujet-Finance-Instruct-177k dataset according to the task types.
-        cls.datasets = cls.seggregate_sujet_task_types(datasets=cls.datasets)
+        cls.temp_datasets = cls.seggregate_sujet_task_types(datasets=cls.temp_datasets)
 
         # 6. Check for the null rows and drop them if required.
-        cls.datasets = cls.drop_null_rows(datasets=cls.datasets)
+        cls.temp_datasets = cls.drop_null_rows(datasets=cls.temp_datasets)
 
         # 7. Check for the duplicate rows and drop them if required.
-        cls.datasets = cls.drop_duplicate_rows(datasets=cls.datasets)
+        cls.temp_datasets = cls.drop_duplicate_rows(datasets=cls.temp_datasets)
 
         # 8. Replace the string labels with integers in Sujet-Finance-Instruct-177k dataset.
-        cls.datasets = cls.convert_string_labels_to_integers(datasets=cls.datasets)
+        cls.temp_datasets = cls.convert_string_labels_to_integers(
+            datasets=cls.temp_datasets
+        )
+
+        # 9. Concatenate the sentimental analysis and NER sentimental analysis into a single dataset.
+        cls.temp_datasets = cls.concatenate_sentimental_analysis_datasets(
+            datasets=cls.temp_datasets
+        )
+
+        # 10. Return the final required datasets
+        datasets = {
+            "sujet_finance": cls.temp_datasets["sujet_finance"]["train"],
+            "sentimental_analysis": cls.temp_datasets["sentimental_analysis"],
+            "yes_no_question": cls.temp_datasets["sujet_finance_yes_no_question"],
+        }
 
         print("\n[Completed] - Preprocessing the datasets.")
 
-        return cls.datasets
+        return datasets
