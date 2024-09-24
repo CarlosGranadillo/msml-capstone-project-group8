@@ -307,7 +307,7 @@ class Preprocess:
         datasets = {
             "sujet_finance": cls.temp_datasets["sujet_finance"]["train"],
             "sentimental_analysis": cls.temp_datasets["sentimental_analysis"],
-            "yes_no_question": cls.temp_datasets["sujet_finance_yes_no_question"],
+            "yes_no_question": cls.temp_datasets["sujet_finance_yes_no_question"]["train"],
         }
 
         print("\n[Completed] - Preprocessing the datasets.")
