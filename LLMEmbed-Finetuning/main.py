@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def main(debug : bool = False):
+def main(debug : bool = False, preprocess : bool = True):
     """
     This method is the starting point for the project. It performs the following tasks -
         1. Preprocess the datasets
@@ -20,8 +20,9 @@ def main(debug : bool = False):
         4.
     """
     # 1. Preprocess the datasets
-    datasets = Preprocess(debug).preprocess()
-    return datasets
+    if preprocess:
+        datasets = Preprocess(debug).preprocess()
+        return datasets
 
 
 if __name__ == "__main__":
