@@ -5,10 +5,10 @@
 from config import Config
 from helpers import Helpers
 from logger import Logger
-from preprocess import Preprocess
 from sklearn.model_selection import train_test_split
 
 from .bert_embeddings import Bert
+from .roberta_embeddings import Roberta
 
 
 class Embeddings:
@@ -29,6 +29,7 @@ class Embeddings:
         cls.log = Logger()
         cls.embeddings = {}
         cls.bert = Bert()
+        cls.roberta = Roberta()
         cls.enable_logging = enable_logging
         cls.device = cls.config.get_device()
 
@@ -55,11 +56,7 @@ class Embeddings:
                 ) = train_test_split(sentences, labels, test_size=0.2, random_state=42)
 
                 for task in tasks:
-                    # Training emebeddings
-                    logger.log(
-                        message=f"\n[Started] - Extract embeddings using Bert LLM for {task} train dataset.",
-                        enable_logging=cls.enable_logging,
-                    )
+                    # Bert Training data emebeddings extraction
                     cls.embeddings[
                         f"bert_{task}_train_embeddings"
                     ] = cls.bert.extract_bert_embeddings(
@@ -69,16 +66,8 @@ class Embeddings:
                         labels=labels_train,
                         task=task,
                     )
-                    logger.log(
-                        message=f"[Completed] - Extract embeddings using Bert LLM for {task} train dataset",
-                        enable_logging=cls.enable_logging,
-                    )
 
-                    # Testing emebeddings
-                    logger.log(
-                        message=f"\n[Started] - Extract embeddings using Bert LLM for {task} test dataset.",
-                        enable_logging=cls.enable_logging,
-                    )
+                    # Bert Testing data emebeddings extraction
                     cls.embeddings[
                         f"bert_{task}_test_embeddings"
                     ] = cls.bert.extract_bert_embeddings(
@@ -88,31 +77,39 @@ class Embeddings:
                         labels=labels_test,
                         task=task,
                     )
-                    logger.log(
-                        message=f"[Completed] - Extract embeddings using Bert LLM for {task} test dataset",
-                        enable_logging=cls.enable_logging,
+
+                for task in tasks:
+                    # Roberta Training emebeddings extraction
+                    cls.embeddings[
+                        f"roberta_{task}_train_embeddings"
+                    ] = cls.roberta.extract_roberta_embeddings(
+                        mode="train",
+                        device=cls.device,
+                        sentences=sentences_train,
+                        labels=labels_train,
+                        task=task,
+                    )
+
+                    # Roberta Testing emebeddings extraction
+                    cls.embeddings[
+                        f"roberta_{task}_test_embeddings"
+                    ] = cls.roberta.extract_roberta_embeddings(
+                        mode="test",
+                        device=cls.device,
+                        sentences=sentences_test,
+                        labels=labels_test,
+                        task=task,
                     )
 
                 # for task in tasks:
                 #     # Training emebeddings
-                #     logger.log(message=f"\n[Started] - Extract embeddings using Roberta LLM for {task} train dataset.",enable_logging=cls.enable_logging)
-                #     cls.embeddings[f"Roberta_{task}_train_embeddings"] = cls.bert.extract_roberta_embeddings(mode = "train", device = cls.device, sentences = sentences_train, labels = labels_train, task = task)
-                #     logger.log(message=f"[Completed] - Extract embeddings using Roberta LLM for {task} train dataset",enable_logging=cls.enable_logging)
-
-                #     # Testing emebeddings
-                #     logger.log(message=f"\n[Started] - Extract embeddings using Roberta LLM for {task} test dataset.",enable_logging=cls.enable_logging)
-                #     cls.embeddings[f"Roberta_{task}_test_embeddings"] = cls.bert.extract_roberta_embeddings(mode = "test", device = cls.device, sentences = sentences_test, labels = labels_test, task = task)
-                #     logger.log(message=f"[Completed] - Extract embeddings using Roberta LLM for {task} test dataset",enable_logging=cls.enable_logging)
-
-                # for task in tasks:
-                #     # Training emebeddings
                 #     logger.log(message=f"\n[Started] - Extract embeddings using Llama LLM for {task} train dataset.",enable_logging=cls.enable_logging)
-                #     cls.embeddings[f"Llama_{task}_train_embeddings"] = cls.bert.extract_llama_embeddings(mode = "train", device = cls.device, sentences = sentences_train, labels = labels_train, task = task)
+                #     cls.embeddings[f"llama_{task}_train_embeddings"] = cls.bert.extract_llama_embeddings(mode = "train", device = cls.device, sentences = sentences_train, labels = labels_train, task = task)
                 #     logger.log(message=f"[Completed] - Extract embeddings using Llama LLM for {task} train dataset",enable_logging=cls.enable_logging)
 
                 #     # Testing emebeddings
                 #     logger.log(message=f"\n[Started] - Extract embeddings using Llama LLM for {task} test dataset.",enable_logging=cls.enable_logging)
-                #     cls.embeddings[f"Llama_{task}_test_embeddings"] = cls.bert.extract_llama_embeddings(mode = "test", device = cls.device, sentences = sentences_test, labels = labels_test, task = task)
+                #     cls.embeddings[f"llama_{task}_test_embeddings"] = cls.bert.extract_llama_embeddings(mode = "test", device = cls.device, sentences = sentences_test, labels = labels_test, task = task)
                 #     logger.log(message=f"[Completed] - Extract embeddings using Llama LLM for {task} test dataset",enable_logging=cls.enable_logging)
 
         print("[Completed] -  Embeddings extraction")

@@ -21,7 +21,7 @@ class Bert:
         This method initialized the variables that are used in this class
         """
         cls.config = Config()
-        cls.model_name = "bert-base-uncased"  # Use a smaller model to save memory
+        cls.model_name = "bert-base-uncased"
         cls.device = cls.config.get_device()
         # Add a logging here
         cls.tokenizer = BertTokenizer.from_pretrained(cls.model_name)
@@ -34,47 +34,44 @@ class Bert:
         cls, mode: str, device: str, sentences: list, labels: list, task: str
     ) -> dict:
         """
-        This method performs the embeddings extractions.
+        This method performs the embeddings extractions using bert.
         """
         path = f"bert_embeddings/{task}/dataset_tensors/"
-        sents_reps = []
+        sentences_reps = []
         step = 64  # Reduced batch size to save memory
         for idx in trange(0, len(sentences), step):
             idx_end = idx + step
             if idx_end > len(sentences):
                 idx_end = len(sentences)
-            sents_batch = sentences[idx:idx_end]
+            sentences_batch = sentences[idx:idx_end]
 
-            sents_batch_encoding = cls.tokenizer(
-                sents_batch,
+            sentences_batch_encoding = cls.tokenizer(
+                sentences_batch,
                 return_tensors="pt",
                 max_length=cls.max_length,
                 padding="max_length",
                 truncation=True,
             )
-            sents_batch_encoding = sents_batch_encoding.to(device)
+            sentences_batch_encoding = sentences_batch_encoding.to(device)
 
             with torch.no_grad():
-                batch_outputs = cls.model(**sents_batch_encoding)
+                batch_outputs = cls.model(**sentences_batch_encoding)
                 reps_batch = batch_outputs.pooler_output
-            sents_reps.append(reps_batch.cpu())
+            sentences_reps.append(reps_batch.cpu())
 
             # Clear cache after processing each batch to free up memory
-            del sents_batch_encoding, batch_outputs, reps_batch
+            del sentences_batch_encoding, batch_outputs, reps_batch
             torch.cuda.empty_cache()
 
-        sents_reps = torch.cat(sents_reps)
+        sentences_reps = torch.cat(sentences_reps)
 
         for idx in range(len(labels)):
             labels[idx] = torch.tensor(labels[idx])
         labels = torch.stack(labels)
 
-        # print(sents_reps.shape)
-        # print(labels.shape)
-
         if not os.path.exists(path):
             os.makedirs(path)
-        torch.save(sents_reps.to("cpu"), path + f"{mode}_texts.pt")
+        torch.save(sentences_reps.to("cpu"), path + f"{mode}_texts.pt")
         torch.save(labels, path + f"{mode}_labels.pt")
 
-        return sents_reps
+        return sentences_reps
