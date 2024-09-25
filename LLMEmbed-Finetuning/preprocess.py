@@ -25,7 +25,7 @@ warnings.filterwarnings("ignore")
 class Preprocess:
     """
     This class performs the following tasks :
-        1. Load the financial_phrasebank and Sujet-Finance-Instruct-177k from hugging face
+        1. Load the financial_phrasebank and Sujet-Finance-Instruct-177k from hugging face.
         2. Filter out the selected task types from the Sujet-Finance-Instruct-177k dataset.
         3. Convert the labels, texts into lowercase in Sujet-Finance-Instruct-177k dataset.
         4. Rename column names in Sujet-Finance-Instruct-177k dataset.
@@ -39,7 +39,7 @@ class Preprocess:
     @classmethod
     def __init__(cls, enable_logging):
         """
-        This method initializes the dictionary to save the datasets
+        This method initializes the dictionary to save the datasets.
         """
         cls.config = Config()
         cls.helpers = Helpers()
@@ -346,7 +346,7 @@ class Preprocess:
             "sujet_finance": cls.temp_datasets["sujet_finance"]["train"],
             "sentimental_analysis": cls.temp_datasets[
                 "sujet_finance_sentiment_analysis"
-            ],
+            ]["train"],
             "yes_no_question": cls.temp_datasets["sujet_finance_yes_no_question"][
                 "train"
             ],
