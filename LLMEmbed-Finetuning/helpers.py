@@ -2,6 +2,8 @@
     This module contains the Helpers class
 """
 
+from datasets import Dataset, concatenate_datasets
+
 
 class Helpers:
     """
@@ -27,21 +29,15 @@ class Helpers:
         return example
 
     @classmethod
-    def ner_extract_label(cls, example, mapping: dict, column_to_modify: str) -> int:
+    def concatenate_sentimental_analysis_datasets(cls, dataset1, dataset2):
         """
-        This function checks if the specific column has
-        positive, negative and neutral in it and assigns the appropriate integer label
-        Example -
-            text : the sentiment in this text about levi strauss & co is positive
-            sentiment : positive
+        This method will concatenate the two datasets with same structure.
         """
-        text = example[column_to_modify].lower()
-        if "positive" in text:
-            example[column_to_modify] = mapping["positive"]
-        elif "neutral" in text:
-            example[column_to_modify] = mapping["neutral"]
-        elif "negative" in text:
-            example[column_to_modify] = mapping["negative"]
-        else:
-            example[column_to_modify] = mapping["unknown"]
-        return example
+        print(f"\n[Started] - Concatenation of the datasets")
+        dataset1_df = dataset1["train"].to_pandas()
+        dataset2_df = dataset1["train"].to_pandas()
+        temp1 = Dataset.from_pandas(dataset1_df)
+        temp2 = Dataset.from_pandas(dataset2_df)
+        concanted_dataset = concatenate_datasets([temp1, temp2])
+        print("[Completed] - Concatenation of the datasets")
+        return concanted_dataset

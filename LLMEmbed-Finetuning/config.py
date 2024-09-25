@@ -13,7 +13,7 @@ class Config:
         """
         This method returns the selected task types for the sujet_finance dataset.
         """
-        tasks = ["sentiment_analysis", "yes_no_question", "ner_sentiment_analysis"]
+        tasks = ["sentiment_analysis", "yes_no_question"]
         return tasks
 
     @classmethod
