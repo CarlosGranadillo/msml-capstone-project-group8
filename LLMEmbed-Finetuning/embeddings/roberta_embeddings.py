@@ -1,5 +1,5 @@
 """
-    This module contains the class to extract embeddings using Roberta LLM
+    This module contains the class to extract embeddings using Roberta LLM.
 """
 
 from config import Config

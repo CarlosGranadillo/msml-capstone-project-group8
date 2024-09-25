@@ -1,5 +1,5 @@
 """
-    This module is the starting point for th embeddings extraction
+    This module is the starting point for th embeddings extraction.
 """
 # Local Imports
 from config import Config
@@ -36,15 +36,12 @@ class Embeddings:
     @classmethod
     def extract(cls, datasets) -> dict:
         """
-        This method extracts the embeddings using the LLM's
+        This method extracts the embeddings using the LLM's.
         """
         print("\n[Started] -  Embeddings extraction")
-        # Load the logger
-        logger = cls.log
         tasks = cls.config.get_selected_task_types()
 
         for dataset_name, dataset in datasets.items():
-            print(dataset_name, dataset)
             if dataset_name in tasks:
                 sentences = dataset["text"]
                 labels = dataset["label"]
@@ -112,6 +109,6 @@ class Embeddings:
                 #     cls.embeddings[f"llama_{task}_test_embeddings"] = cls.bert.extract_llama_embeddings(mode = "test", device = cls.device, sentences = sentences_test, labels = labels_test, task = task)
                 #     logger.log(message=f"[Completed] - Extract embeddings using Llama LLM for {task} test dataset",enable_logging=cls.enable_logging)
 
-        print("[Completed] -  Embeddings extraction")
+        print("[Completed] -  Embeddings extraction.")
 
         return cls.embeddings
