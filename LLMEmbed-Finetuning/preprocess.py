@@ -154,7 +154,7 @@ class Preprocess:
         """
         print("\n[Started] - Remove null rows from the datasets.")
         for dataset_name, dataset in datasets.items():
-            print(f"\t[Started] - Null rows removal for {dataset_name}.")
+            print(f"\n\t[Started] - Null rows removal for {dataset_name}.")
             column_names = dataset["train"].column_names
             print(f"\t\tNo.of rows in {dataset_name} : {len(dataset['train'])}")
             filtered_dataset = dataset["train"].filter(
@@ -178,7 +178,7 @@ class Preprocess:
         """
         print("\n[Started] - Remove duplicate rows from the datasets.")
         for dataset_name, dataset in datasets.items():
-            print(f"\t[Started] - Duplicate rows removal for {dataset_name}.")
+            print(f"\n\t[Started] - Duplicate rows removal for {dataset_name}.")
             unique = set()
             column_names = dataset["train"].column_names
             print(f"\t\tNo.of rows in {dataset_name} : {len(dataset['train'])}")
