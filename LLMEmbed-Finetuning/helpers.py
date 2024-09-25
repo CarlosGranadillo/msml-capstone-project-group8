@@ -37,11 +37,11 @@ class Helpers:
         """
         text = example[column_to_modify].lower()
         if "positive" in text:
-            example["sentiment"] = mapping["positive"]
+            example[column_to_modify] = mapping["positive"]
         elif "neutral" in text:
-            example["sentiment"] = mapping["neutral"]
+            example[column_to_modify] = mapping["neutral"]
         elif "negative" in text:
-            example["sentiment"] = mapping["negative"]
+            example[column_to_modify] = mapping["negative"]
         else:
-            example["sentiment"] = mapping["unknown"]
+            example[column_to_modify] = mapping["unknown"]
         return example

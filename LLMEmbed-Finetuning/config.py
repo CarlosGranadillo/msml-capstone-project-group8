@@ -30,12 +30,8 @@ class Config:
         This method returns the mappings for the column names rename.
         """
         sujet_finance_column_renamings = {"user_prompt": "text", "answer": "label"}
-        phrasebank_column_renamings = {
-            "sentence": "text",
-        }
         rename_dict = {
             "sujet": sujet_finance_column_renamings,
-            "phrasebank": phrasebank_column_renamings,
         }
         return rename_dict
 
