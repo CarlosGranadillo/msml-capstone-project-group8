@@ -24,14 +24,16 @@ warnings.filterwarnings("ignore")
 class Preprocess:
     """
     This class performs the following tasks :
-        1. Load the financial_phrasebank and Sujet-Finance-Instruct-177k from hugging face.
-        2. Filter out the selected task types from the datasets.
-        3. Convert the labels, texts into lowercase in both the datasets.
-        4. Rename column names to maintain consistency between the two datasets.
-        5. Reorder the dataset columns to maintain consistency between the two datasets.
-        6. Seggregate the sujet_finance datasets according to the task types.
-        7. Replace the string labels with integers in Sujet-Finance-Instruct-177k dataset.
-        8. Concantenate the Sujet-Finance-Instruct-177k and financial_phrasebank datasets based on the task types
+        1. Load the financial_phrasebank and Sujet-Finance-Instruct-177k from hugging face
+        2. Filter out the selected task types from the Sujet-Finance-Instruct-177k dataset.
+        3. Convert the labels, texts into lowercase in Sujet-Finance-Instruct-177k dataset.
+        4. Rename column names in Sujet-Finance-Instruct-177k dataset.
+        5. Seggregate the Sujet-Finance-Instruct-177k dataset according to the task types.
+        6. Check for the null rows and drop them if required.
+        7. Check for the duplicate rows and drop them if required.
+        8. Replace the string labels with integers in Sujet-Finance-Instruct-177k dataset.
+        9. Concatenate the sentimental analysis and NER sentimental analysis into a single dataset.
+        10. Return the final required datasets.
 
     """
 
@@ -267,7 +269,7 @@ class Preprocess:
         """
         print("\n[Started] - Preprocessing the datasets.")
 
-        # 1. Load the financial_phrasebank and Sujet-Finance-Instruct-177k from hugging face
+        # 1. Load the financial_phrasebank and Sujet-Finance-Instruct-177k from hugging face.
         cls.temp_datasets = cls.load_datasets()
 
         ## Convert the datasets into pandas dataframe
@@ -278,7 +280,7 @@ class Preprocess:
             dataset=cls.temp_datasets["sujet_finance"]
         )
 
-        # 3. Convert the labels, texts into lowercase in Sujet-Finance-Instruct-177k dataset
+        # 3. Convert the labels, texts into lowercase in Sujet-Finance-Instruct-177k dataset.
         cls.temp_datasets = cls.convert_lower_case(datasets=cls.temp_datasets)
 
         # 4. Rename column names in Sujet-Finance-Instruct-177k dataset.
@@ -303,7 +305,7 @@ class Preprocess:
             datasets=cls.temp_datasets
         )
 
-        # 10. Return the final required datasets
+        # 10. Return the final required datasets.
         datasets = {
             "sujet_finance": cls.temp_datasets["sujet_finance"]["train"],
             "sentimental_analysis": cls.temp_datasets["sentimental_analysis"],
