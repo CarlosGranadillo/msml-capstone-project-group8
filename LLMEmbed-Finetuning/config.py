@@ -1,6 +1,7 @@
 """
     This module contain the Config class
 """
+import torch
 
 
 class Config:
@@ -38,7 +39,7 @@ class Config:
     @classmethod
     def get_columns_order(cls) -> list:
         """
-        This function returns the order of the columns
+        This function returns the order of the columns.
         """
         cols_order = ["text", "label"]
         return cols_order
@@ -46,7 +47,7 @@ class Config:
     @classmethod
     def get_sentiment_mapping(cls) -> dict:
         """
-        This function returns the sentiment string to integer mapping of the class labels
+        This function returns the sentiment string to integer mapping of the class labels.
         """
         sentiment_mapping = {
             "negative": 0,
@@ -61,7 +62,15 @@ class Config:
     @classmethod
     def get_yes_no_mapping(cls) -> dict:
         """
-        This function returns the sentiment string to integer mapping of the class labels
+        This function returns the sentiment string to integer mapping of the class labels.
         """
         yes_no_mapping = {"yes": 0, "no": 1}
         return yes_no_mapping
+
+    @classmethod
+    def get_device(cls) -> str:
+        """
+        This function returns the device available.
+        """
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        return device

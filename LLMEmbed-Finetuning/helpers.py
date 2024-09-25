@@ -33,9 +33,9 @@ class Helpers:
         """
         This method will concatenate the two datasets with same structure.
         """
-        print(f"\n[Started] - Concatenation of the datasets")
+        print("\n[Started] - Concatenation of the datasets")
         dataset1_df = dataset1["train"].to_pandas()
-        dataset2_df = dataset1["train"].to_pandas()
+        dataset2_df = dataset2["train"].to_pandas()
         temp1 = Dataset.from_pandas(dataset1_df)
         temp2 = Dataset.from_pandas(dataset2_df)
         concanted_dataset = concatenate_datasets([temp1, temp2])

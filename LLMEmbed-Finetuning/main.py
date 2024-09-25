@@ -3,6 +3,7 @@
 """
 # Local Imports
 from preprocess import Preprocess
+from embeddings import Embeddings
 
 # General Imports
 import warnings
@@ -10,7 +11,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def main(debug : bool = False, preprocess : bool = True):
+def main(debug: bool = False, preprocess: bool = True, extract: bool = True):
     """
     This method is the starting point for the project. It performs the following tasks -
         1. Preprocess the datasets
@@ -22,8 +23,14 @@ def main(debug : bool = False, preprocess : bool = True):
     # 1. Preprocess the datasets
     if preprocess:
         datasets = Preprocess(debug).preprocess()
-        return datasets
+    print(
+        "--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
+    )
+    # 2. Extract the embeddings
+    if extract:
+        embeddings = Embeddings(debug).extract(datasets=datasets)
+        print(embeddings)
 
 
 if __name__ == "__main__":
-    main()
+    main(debug=False, preprocess=True, extract=True)

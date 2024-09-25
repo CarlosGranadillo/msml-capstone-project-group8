@@ -7,14 +7,7 @@ from helpers import Helpers
 from logger import Logger
 
 # General Imports
-from datasets import load_dataset, concatenate_datasets, Dataset
-from transformers import (
-    AutoTokenizer,
-    AutoModel,
-    AutoModelForSequenceClassification,
-    Trainer,
-    TrainingArguments,
-)
+from datasets import load_dataset
 import torch
 import warnings
 import numpy as np
@@ -70,7 +63,7 @@ class Preprocess:
     def select_task_types_columns(cls, dataset) -> dict:
         """
         This method will filter out the task types, and also select only few columns from the sujet_finance dataset.
-        The selected task types : ["sentiment_analysis","yes_no_question", "ner_sentiment_analysis"]
+        The selected task types : ["sentiment_analysis","yes_no"]
         """
         selected_task_types = cls.config.get_selected_task_types()
         selected_columns = cls.config.get_selected_columns()
