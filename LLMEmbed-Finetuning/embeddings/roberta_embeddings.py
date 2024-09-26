@@ -1,10 +1,11 @@
 """
     This module contains the class to extract embeddings using Roberta LLM.
 """
-
+# Local Imports
 from config import Config
 from logger import Logger
 
+# General Imports
 import os
 import torch
 from transformers import RobertaTokenizer, RobertaModel
