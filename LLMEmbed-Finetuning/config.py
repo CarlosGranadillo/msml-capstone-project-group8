@@ -1,12 +1,12 @@
 """
-    This module contain the Config class
+    This module contain the Config class.
 """
 import torch
 
 
 class Config:
     """
-    This class will load the configuration details and also save the default values
+    This class will load the configuration details and also save the default values.
     """
 
     @classmethod

@@ -7,6 +7,7 @@ from embeddings import Embeddings
 
 # General Imports
 import warnings
+
 warnings.filterwarnings("ignore")
 
 
@@ -29,5 +30,6 @@ def main(debug: bool = False, preprocess: bool = True, extract: bool = True):
     if extract:
         embeddings = Embeddings(debug).extract(datasets=datasets)
 
+
 if __name__ == "__main__":
-    main(debug=False, preprocess=True, extract=True)
+    main(debug=True, preprocess=False, extract=True)

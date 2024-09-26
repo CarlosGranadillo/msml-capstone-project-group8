@@ -3,6 +3,7 @@
 """
 
 from config import Config
+from logger import Logger
 
 import os
 import torch
@@ -16,16 +17,35 @@ class Bert:
     """
 
     @classmethod
-    def __init__(cls):
+    def __init__(cls, enable_logging):
         """
         This method initialized the variables that are used in this class
         """
         cls.config = Config()
+        cls.log = Logger()
         cls.model_name = "bert-base-uncased"
         cls.device = cls.config.get_device()
-        # Add a logging here
+        cls.enable_logging = enable_logging
+
+        cls.log.log(
+            message=f"\n[Started] - Loading the tokenizer for the {cls.model_name} LLM model from hugging face.",
+            enable_logging=enable_logging,
+        )
         cls.tokenizer = BertTokenizer.from_pretrained(cls.model_name)
+        cls.log.log(
+            message=f"[Completed] - Loading the tokenizer for the {cls.model_name} LLM model from hugging face.",
+            enable_logging=enable_logging,
+        )
+
+        cls.log.log(
+            message=f"\n[Started] - Loading the {cls.model_name} LLM model from hugging face.",
+            enable_logging=enable_logging,
+        )
         cls.model = BertModel.from_pretrained(cls.model_name).to(cls.device)
+        cls.log.log(
+            message=f"[Completed] - Loading the {cls.model_name} LLM model from hugging face.",
+            enable_logging=enable_logging,
+        )
         cls.max_length = 512
         cls.model.eval()
 
@@ -36,6 +56,10 @@ class Bert:
         """
         This method performs the embeddings extractions using bert.
         """
+        cls.log.log(
+            message=f"\n[Started] - Performing embeddings extraction using {cls.model_name}",
+            enable_logging=cls.enable_logging,
+        )
         path = f"bert_embeddings/{task}/dataset_tensors/"
         sentences_reps = []
         step = 64  # Reduced batch size to save memory
@@ -74,4 +98,8 @@ class Bert:
         torch.save(sentences_reps.to("cpu"), path + f"{mode}_texts.pt")
         torch.save(labels, path + f"{mode}_labels.pt")
 
+        cls.log.log(
+            message=f"[Completed] - Performing embeddings extraction using {cls.model_name}",
+            enable_logging=cls.enable_logging,
+        )
         return sentences_reps
