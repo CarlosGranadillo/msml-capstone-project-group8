@@ -76,3 +76,46 @@ class Config:
         """
         device = "cuda" if torch.cuda.is_available() else "cpu"
         return device
+    
+    @classmethod
+    def get_base_path(cls) -> str:
+        """
+        This function returns the path for the embeddings to be stored.
+        """
+        path = "/home/exouser/Desktop/msml-group8-code-base/embeddings/"  # change it to a desired path
+        return path
+    
+    @classmethod
+    def get_embeddings_path(cls, task : str, mode : str) -> str:
+        """
+        This function returns the paths where the embeddings are stored for the LLM's.
+        """
+        base_path = cls.get_base_path()
+        l_path = base_path + f"llama2_embeddings/{task}/dataset_tensors/{mode}_texts.pt"
+        b_path = base_path + f"bert_embeddings/{task}/dataset_tensors/{mode}_texts.pt"
+        r_path = base_path + f"roberta_embeddings/{task}/dataset_tensors/{mode}_texts.pt"
+        # labels will remain same for all the extractions
+        labels_path = base_path+ f"llama2_embeddings/{task}/dataset_tensors/{mode}_labels.pt"
+        return l_path, b_path, r_path, labels_path
+    
+    @classmethod
+    def get_hugging_face_token(cls) -> str:
+        """
+        This function returns the path for the embeddings to be stored.
+        """
+        token = "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"  # change it to the user token
+        return token
+    
+    @classmethod
+    def get_modes(cls) -> list:
+        """
+        This function returns the modes.
+        """
+        modes = ["train","test"]
+        return modes
+    
+
+    
+    
+    
+

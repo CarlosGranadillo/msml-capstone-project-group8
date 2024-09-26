@@ -7,11 +7,16 @@ import os
 import torch
 from datasets import Dataset, concatenate_datasets
 
+# Local Imports
+from config import Config
 
 class Helpers:
     """
     This class contains all the helper methods that are used in this project
     """
+    @classmethod
+    def __init__(cls):
+        cls.config = Config()
 
     @classmethod
     def convert_column_to_lowercase(cls, example, column_to_lowercase: str) -> str:
@@ -52,7 +57,7 @@ class Helpers:
         """
         This method saves the embeddings in a local folder
         """
-        save_path = "/home/exouser/Desktop/msml-group8-code-base/embeddings/"  # change it to a desired path
+        save_path = cls.config.get_base_path()
         if not os.path.exists(save_path + file_path):
             os.makedirs(save_path + file_path)
         torch.save(

@@ -21,16 +21,14 @@ class Llama2:
     """
 
     @classmethod
-    def __init__(cls, enable_logging):
+    def __init__(cls, enable_logging : bool):
         """
         This method initialized the variables that are used in this class
         """
         cls.config = Config()
         cls.helpers = Helpers()
         cls.model_name = "meta-llama/Llama-2-7b-hf"
-        cls.login_token = (
-            "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"  # Replace your token here
-        )
+        cls.login_token = cls.config.get_hugging_face_token()
         cls.max_length = 128
         cls.log = Logger()
         cls.device = cls.config.get_device()
@@ -75,7 +73,7 @@ class Llama2:
         cls.model.eval()
 
     @classmethod
-    def model_repo_login(cls, enable_logging):
+    def model_repo_login(cls, enable_logging : bool):
         """
         The meta-llama/Llama-2-7b-hf is a private gate repo, hence we need to get access to it and authenticate using a token.
         please refer this url to get the access - https://huggingface.co/meta-llama/Llama-2-7b-hf.

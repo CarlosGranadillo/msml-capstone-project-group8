@@ -20,7 +20,7 @@ class Roberta:
     """
 
     @classmethod
-    def __init__(cls, enable_logging):
+    def __init__(cls, enable_logging : bool):
         """
         This method initialized the variables that are used in this class
         """
