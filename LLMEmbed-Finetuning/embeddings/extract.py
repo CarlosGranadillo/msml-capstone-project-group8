@@ -8,7 +8,7 @@ from helpers import Helpers
 from logger import Logger
 from .bert_embeddings import Bert
 from .roberta_embeddings import Roberta
-from .llama_embeddings import Llama2
+from .llama2_embeddings import Llama2
 
 # General Imports
 from sklearn.model_selection import train_test_split
