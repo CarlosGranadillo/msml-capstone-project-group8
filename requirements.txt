@@ -6,3 +6,5 @@ pandas
 black
 huggingface
 huggingface-hub
+scikit-learn
+accelerate

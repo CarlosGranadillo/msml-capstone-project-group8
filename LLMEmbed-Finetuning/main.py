@@ -1,6 +1,7 @@
 """
     This is the main module
 """
+
 # Local Imports
 from preprocess import Preprocess
 from embeddings import Embeddings
@@ -8,6 +9,7 @@ from embeddings import Embeddings
 # General Imports
 import os
 import warnings
+
 warnings.filterwarnings("ignore")
 
 
@@ -24,18 +26,12 @@ def main(debug: bool = False, preprocess: bool = True, extract: bool = True):
     if preprocess:
         datasets = Preprocess(debug).preprocess()
     print(
-        "--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
+        "------------------------------------------------------------------------------------------"
     )
     # 2. Extract the embeddings
     if extract:
         embeddings = Embeddings(debug).extract(datasets=datasets)
 
-    save_path = "/Users/daniel22/Desktop/Masters_Arizona/Course_Modules/Capstone Project/code-base/embeddings"
-    file_path = f"{save_path}/test.txt"
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-    with open(file_path, 'w') as f:
-        f.write("Your content here")
 
 if __name__ == "__main__":
-    main(debug=False, preprocess=False, extract=False)
+    main(debug=True, preprocess=True, extract=True)

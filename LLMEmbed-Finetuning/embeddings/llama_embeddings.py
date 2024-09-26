@@ -1,9 +1,11 @@
 """
     This module contains the class to extract embeddings using Llama LLM.
 """
+
 # Local Imports
 from config import Config
 from logger import Logger
+from helpers import Helpers
 
 # General Imports
 import os
@@ -24,6 +26,7 @@ class Llama2:
         This method initialized the variables that are used in this class
         """
         cls.config = Config()
+        cls.helpers = Helpers()
         cls.model_name = "meta-llama/Llama-2-7b-hf"
         cls.login_token = (
             "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"  # Replace your token here
@@ -96,7 +99,7 @@ class Llama2:
         This method performs the embeddings extractions using LLama2.
         """
         cls.log.log(
-            message=f"\n[Started] - Performing embeddings extraction using {cls.model_name}",
+            message=f"\n[Started] - Performing embeddings extraction using {cls.model_name} for {task} on {mode} data.",
             enable_logging=cls.enable_logging,
         )
         path = f"llama2_embeddings/{task}/dataset_tensors/"
@@ -139,16 +142,14 @@ class Llama2:
             )
 
         sentences_reps = torch.cat(sentences_reps)
-
         labels = torch.stack([torch.tensor(label) for label in labels])
 
-        if not os.path.exists(path):
-            os.makedirs(path)
-        torch.save(sentences_reps.to("cpu"), path + f"{mode}_sentences.pt")
-        torch.save(labels, path + f"{mode}_labels.pt")
+        cls.helpers.save_embeddings(
+            sentences_embeds=sentences_reps, labels=labels, file_path=path, mode=mode
+        )
 
         cls.log.log(
-            message=f"[Completed] - Performing embeddings extraction using {cls.model_name}",
+            message=f"[Completed] - Performing embeddings extraction using {cls.model_name} for {task} on {mode} data.",
             enable_logging=cls.enable_logging,
         )
         return sentences_reps

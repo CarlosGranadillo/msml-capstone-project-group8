@@ -1,6 +1,7 @@
 """
     This module contains the Preprocess class
 """
+
 # Local Imports
 from config import Config
 from helpers import Helpers

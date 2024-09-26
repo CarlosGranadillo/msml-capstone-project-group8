@@ -1,7 +1,10 @@
 """
     This module contains the Helpers class
 """
+
 # General Imports
+import os
+import torch
 from datasets import Dataset, concatenate_datasets
 
 
@@ -41,3 +44,18 @@ class Helpers:
         concanted_dataset = concatenate_datasets([temp1, temp2])
         print("[Completed] - Concatenation of the datasets")
         return concanted_dataset
+
+    @classmethod
+    def save_embeddings(
+        cls, sentences_embeds: list, labels: list, file_path: str, mode: str
+    ):
+        """
+        This method saves the embeddings in a local folder
+        """
+        save_path = "/home/exouser/Desktop/msml-group8-code-base/embeddings/"  # change it to a desired path
+        if not os.path.exists(save_path + file_path):
+            os.makedirs(save_path + file_path)
+        torch.save(
+            sentences_embeds.to("cpu"), save_path + file_path + f"{mode}_texts.pt"
+        )
+        torch.save(labels, save_path + file_path + f"{mode}_labels.pt")

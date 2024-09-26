@@ -1,9 +1,11 @@
 """
     This module contains the class to extract embeddings using Bert LLM
 """
+
 # Local Imports
 from config import Config
 from logger import Logger
+from helpers import Helpers
 
 # General Imports
 import os
@@ -24,6 +26,7 @@ class Bert:
         """
         cls.config = Config()
         cls.log = Logger()
+        cls.helpers = Helpers()
         cls.model_name = "bert-base-uncased"
         cls.device = cls.config.get_device()
         cls.enable_logging = enable_logging
@@ -58,7 +61,7 @@ class Bert:
         This method performs the embeddings extractions using bert.
         """
         cls.log.log(
-            message=f"\n[Started] - Performing embeddings extraction using {cls.model_name}",
+            message=f"\n[Started] - Performing embeddings extraction using {cls.model_name} for {task} on {mode} data.",
             enable_logging=cls.enable_logging,
         )
         path = f"bert_embeddings/{task}/dataset_tensors/"
@@ -94,13 +97,12 @@ class Bert:
             labels[idx] = torch.tensor(labels[idx])
         labels = torch.stack(labels)
 
-        if not os.path.exists(path):
-            os.makedirs(path)
-        torch.save(sentences_reps.to("cpu"), path + f"{mode}_texts.pt")
-        torch.save(labels, path + f"{mode}_labels.pt")
+        cls.helpers.save_embeddings(
+            sentences_embeds=sentences_reps, labels=labels, file_path=path, mode=mode
+        )
 
         cls.log.log(
-            message=f"[Completed] - Performing embeddings extraction using {cls.model_name}",
+            message=f"[Completed] - Performing embeddings extraction using {cls.model_name} for {task} on {mode} data.",
             enable_logging=cls.enable_logging,
         )
         return sentences_reps

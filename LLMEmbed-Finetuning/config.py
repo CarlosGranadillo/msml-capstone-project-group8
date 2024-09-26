@@ -1,7 +1,8 @@
 """
     This module contain the Config class.
 """
-# General Imports 
+
+# General Imports
 import torch
 
 
