@@ -1,11 +1,14 @@
 """
-    This module contain the Config class
+    This module contain the Config class.
 """
+
+# General Imports
+import torch
 
 
 class Config:
     """
-    This class will load the configuration details and also save the default values
+    This class will load the configuration details and also save the default values.
     """
 
     @classmethod
@@ -13,7 +16,7 @@ class Config:
         """
         This method returns the selected task types for the sujet_finance dataset.
         """
-        tasks = ["sentiment_analysis", "yes_no_question", "ner_sentiment_analysis"]
+        tasks = ["sentiment_analysis", "yes_no_question"]
         return tasks
 
     @classmethod
@@ -38,7 +41,7 @@ class Config:
     @classmethod
     def get_columns_order(cls) -> list:
         """
-        This function returns the order of the columns
+        This function returns the order of the columns.
         """
         cols_order = ["text", "label"]
         return cols_order
@@ -46,7 +49,7 @@ class Config:
     @classmethod
     def get_sentiment_mapping(cls) -> dict:
         """
-        This function returns the sentiment string to integer mapping of the class labels
+        This function returns the sentiment string to integer mapping of the class labels.
         """
         sentiment_mapping = {
             "negative": 0,
@@ -61,7 +64,58 @@ class Config:
     @classmethod
     def get_yes_no_mapping(cls) -> dict:
         """
-        This function returns the sentiment string to integer mapping of the class labels
+        This function returns the sentiment string to integer mapping of the class labels.
         """
         yes_no_mapping = {"yes": 0, "no": 1}
         return yes_no_mapping
+
+    @classmethod
+    def get_device(cls) -> str:
+        """
+        This function returns the device available.
+        """
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        return device
+    
+    @classmethod
+    def get_base_path(cls) -> str:
+        """
+        This function returns the path for the embeddings to be stored.
+        """
+        path = "/home/exouser/Desktop/msml-group8-code-base/embeddings/"  # change it to a desired path
+        return path
+    
+    @classmethod
+    def get_embeddings_path(cls, task : str, mode : str) -> str:
+        """
+        This function returns the paths where the embeddings are stored for the LLM's.
+        """
+        base_path = cls.get_base_path()
+        l_path = base_path + f"llama2_embeddings/{task}/dataset_tensors/{mode}_texts.pt"
+        b_path = base_path + f"bert_embeddings/{task}/dataset_tensors/{mode}_texts.pt"
+        r_path = base_path + f"roberta_embeddings/{task}/dataset_tensors/{mode}_texts.pt"
+        # labels will remain same for all the extractions
+        labels_path = base_path+ f"llama2_embeddings/{task}/dataset_tensors/{mode}_labels.pt"
+        return l_path, b_path, r_path, labels_path
+    
+    @classmethod
+    def get_hugging_face_token(cls) -> str:
+        """
+        This function returns the path for the embeddings to be stored.
+        """
+        token = "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"  # change it to the user token
+        return token
+    
+    @classmethod
+    def get_modes(cls) -> list:
+        """
+        This function returns the modes.
+        """
+        modes = ["train","test"]
+        return modes
+    
+
+    
+    
+    
+

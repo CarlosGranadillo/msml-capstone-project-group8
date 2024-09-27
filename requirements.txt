@@ -1,0 +1,10 @@
+datasets
+transformers
+torch
+numpy
+pandas
+black
+huggingface
+huggingface-hub
+scikit-learn
+accelerate

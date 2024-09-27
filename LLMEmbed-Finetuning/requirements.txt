@@ -1,7 +1,0 @@
-datasets
-transformers
-torch
-numpy
-pandas
-black
-huggingface
