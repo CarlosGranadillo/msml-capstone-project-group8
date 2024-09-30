@@ -55,16 +55,17 @@ def main(
         print(
             "\n----------------------------------Skipping Embeddings Extraction-----------------------------------------------"
         )
-        
+
     # 3. Run the downstream model on the extracted embeddings
-    # data = Data(debug).extract_data()
+    data = Data(debug).extract_data()
+    return data
 
 
 if __name__ == "__main__":
     main(
         debug=True,
         preprocess=True,
-        extract=True,
+        extract=False,
         save_data_in_local=False,
         read_data_from_local=True,
     )

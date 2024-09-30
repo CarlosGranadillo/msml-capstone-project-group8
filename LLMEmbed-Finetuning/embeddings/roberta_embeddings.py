@@ -103,4 +103,4 @@ class Roberta:
             message=f"[Completed] - Performing embeddings extraction using {cls.model_name} for {task} on {mode} data.",
             enable_logging=cls.enable_logging,
         )
-        return sentences_reps
+        return sentences_reps, labels
