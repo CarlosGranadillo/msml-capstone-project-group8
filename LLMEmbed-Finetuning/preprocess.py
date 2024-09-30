@@ -268,15 +268,22 @@ class Preprocess:
         # Load the logger
         logger = cls.log
 
-        print("\n[Started] - Preprocessing the datasets.")
         if read_data_from_local:
-            logger.log(
-                message="\n[Started] - Load the Sujet-Finance-Instruct-177k dataset.",
-                enable_logging=cls.enable_logging,
-            )
-            datasets = read_data_from_local()
+            datasets = {}
+            datasets_to_load = cls.config.get_local_datasets_names()
+            for dataset_name in datasets_to_load:
+                logger.log(
+                    message=f"\n[Started] - Loading the {dataset_name} dataset from local.",
+                    enable_logging=cls.enable_logging,
+                )
+                datasets[dataset_name] = cls.helpers.read_dataset_from_local(dataset_name=dataset_name)
+                logger.log(
+                    message=f"[Completed] - Loading the {dataset_name} dataset from local.",
+                    enable_logging=cls.enable_logging,
+                )
             return datasets
         else:
+            print("\n[Started] - Preprocessing the datasets.")
             # 1. Load the financial_phrasebank and Sujet-Finance-Instruct-177k from hugging face.
             logger.log(
                 message="\n[Started] - Load the Sujet-Finance-Instruct-177k dataset from hugging face.",
@@ -385,14 +392,14 @@ class Preprocess:
             # 10. Return the final required datasets.
             datasets = {
                 "sujet_finance": cls.temp_datasets["sujet_finance"],
-                "sentimental_analysis": cls.temp_datasets[
+                "sentiment_analysis": cls.temp_datasets[
                     "sujet_finance_sentiment_analysis"
                 ],
                 "yes_no_question": cls.temp_datasets["sujet_finance_yes_no_question"],
                 "sujet_finance_fine_tuning": cls.temp_datasets[
                     "sujet_finance_fine_tuning"
                 ],
-                "sentimental_analysis_finetuning": cls.temp_datasets[
+                "sentiment_analysis_fine_tuning": cls.temp_datasets[
                     "sujet_finance_sentiment_analysis_fine_tuning"
                 ],
                 "yes_no_question_fine_tuning": cls.temp_datasets[
@@ -410,6 +417,6 @@ class Preprocess:
                         message=f"\t[Completed] - Saving the {dataset_name} dataset to local directory.",
                         enable_logging=cls.enable_logging,
                     )
-
+            print("\n[Completed] - Preprocessing the datasets.")
             return datasets
-        print("\n[Completed] - Preprocessing the datasets.")
+        

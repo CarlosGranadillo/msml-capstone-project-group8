@@ -39,6 +39,7 @@ def main(
         print(
             "\n----------------------------------Skipping Preprocessing--------------------------------------------------------"
         )
+    print(datasets)
     # 2. Extract the embeddings
     if extract:
         embeddings = Embeddings(debug).extract(datasets=datasets)
@@ -56,6 +57,6 @@ if __name__ == "__main__":
         debug=True,
         preprocess=True,
         extract=False,
-        save_data_in_local=True,
-        read_data_from_local=False,
+        save_data_in_local=False,
+        read_data_from_local=True,
     )

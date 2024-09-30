@@ -4,8 +4,9 @@
 
 # General Imports
 import os
+import shutil
 import torch
-from datasets import Dataset, concatenate_datasets
+from datasets import Dataset, concatenate_datasets, load_from_disk
 
 # Local Imports
 from config import Config
@@ -70,9 +71,25 @@ class Helpers:
     @classmethod
     def save_dataset(cls, dataset, file_name : str):
         """
-        This method will save the dataset to a local folder inorder to reuse.
+            This method will save the dataset to a local folder inorder to reuse.
         """
         save_path = cls.config.get_base_path() + "data/"
+        file_path = save_path + file_name
         if not os.path.exists(save_path):
             os.makedirs(save_path)
-        dataset.save_to_disk(save_path + file_name)
+        elif os.path.exists(file_path):
+            shutil.rmtree(file_path)
+            dataset.save_to_disk(file_path)
+        else:
+            dataset.save_to_disk(file_path)
+
+        
+    
+    @classmethod
+    def read_dataset_from_local(cls, dataset_name : str):
+        """
+            This dataset loads the data from a local directory.
+        """
+        load_path = cls.config.get_base_path() + "data/" + dataset_name
+        dataset = load_from_disk(load_path)
+        return dataset
