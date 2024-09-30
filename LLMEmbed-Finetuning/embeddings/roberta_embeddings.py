@@ -27,7 +27,7 @@ class Roberta:
         cls.config = Config()
         cls.log = Logger()
         cls.helpers = Helpers()
-        cls.model_name = "distilroberta-base"
+        cls.model_name = "FacebookAI/roberta-large"
         cls.device = cls.config.get_device()
         cls.enable_logging = enable_logging
 

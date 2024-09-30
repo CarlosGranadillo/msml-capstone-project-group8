@@ -276,7 +276,9 @@ class Preprocess:
                     message=f"\n[Started] - Loading the {dataset_name} dataset from local.",
                     enable_logging=cls.enable_logging,
                 )
-                datasets[dataset_name] = cls.helpers.read_dataset_from_local(dataset_name=dataset_name)
+                datasets[dataset_name] = cls.helpers.read_dataset_from_local(
+                    dataset_name=dataset_name
+                )
                 logger.log(
                     message=f"[Completed] - Loading the {dataset_name} dataset from local.",
                     enable_logging=cls.enable_logging,
@@ -419,4 +421,3 @@ class Preprocess:
                     )
             print("\n[Completed] - Preprocessing the datasets.")
             return datasets
-        

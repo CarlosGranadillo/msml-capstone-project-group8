@@ -27,7 +27,7 @@ class Llama2:
         """
         cls.config = Config()
         cls.helpers = Helpers()
-        cls.model_name = "meta-llama/Llama-2-7b-hf"
+        cls.model_name = "meta-llama/Llama-2-7b-chat-hf"
         cls.login_token = cls.config.get_hugging_face_token()
         cls.max_length = 128
         cls.log = Logger()

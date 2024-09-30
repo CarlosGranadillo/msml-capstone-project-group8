@@ -27,7 +27,7 @@ class Bert:
         cls.config = Config()
         cls.log = Logger()
         cls.helpers = Helpers()
-        cls.model_name = "bert-base-uncased"
+        cls.model_name = "google-bert/bert-large-uncased"
         cls.device = cls.config.get_device()
         cls.enable_logging = enable_logging
 

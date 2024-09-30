@@ -49,7 +49,7 @@ def main(
         )
 
     # 3. Run the downstream model on the extracted embeddings
-    #data = Data(debug).extract_data()
+    data = Data(debug).extract_data()
 
 
 if __name__ == "__main__":
