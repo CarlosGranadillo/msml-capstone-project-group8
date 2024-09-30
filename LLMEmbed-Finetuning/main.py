@@ -14,7 +14,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def main(debug: bool = False, preprocess: bool = True, extract: bool = True):
+def main(
+    debug: bool,
+    preprocess: bool,
+    extract: bool,
+    save_data_in_local: bool,
+    read_data_from_local: bool,
+):
     """
     This method is the starting point for the project. It performs the following tasks -
         1. Preprocess the datasets.
@@ -25,21 +31,31 @@ def main(debug: bool = False, preprocess: bool = True, extract: bool = True):
     """
     # 1. Preprocess the datasets
     if preprocess:
-        datasets = Preprocess(debug).preprocess()
+        datasets = Preprocess(debug).preprocess(
+            save_data_in_local=save_data_in_local,
+            read_data_from_local=read_data_from_local,
+        )
     else:
         print(
-            "----------------------------------Skipping Preprocessing--------------------------------------------------------"
+            "\n----------------------------------Skipping Preprocessing--------------------------------------------------------"
         )
     # 2. Extract the embeddings
     if extract:
         embeddings = Embeddings(debug).extract(datasets=datasets)
     else:
         print(
-            "----------------------------------Skipping Embeddings Extraction-----------------------------------------------"
+            "\n----------------------------------Skipping Embeddings Extraction-----------------------------------------------"
         )
 
     # 3. Run the downstream model on the extracted embeddings
     data = Data(debug).extract_data()
 
+
 if __name__ == "__main__":
-    main(debug=False, preprocess=False, extract=False)
+    main(
+        debug=True,
+        preprocess=True,
+        extract=False,
+        save_data_in_local=False,
+        read_data_from_local=False,
+    )

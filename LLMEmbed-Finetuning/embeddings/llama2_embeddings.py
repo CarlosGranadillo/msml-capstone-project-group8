@@ -21,7 +21,7 @@ class Llama2:
     """
 
     @classmethod
-    def __init__(cls, enable_logging : bool):
+    def __init__(cls, enable_logging: bool):
         """
         This method initialized the variables that are used in this class
         """
@@ -73,7 +73,7 @@ class Llama2:
         cls.model.eval()
 
     @classmethod
-    def model_repo_login(cls, enable_logging : bool):
+    def model_repo_login(cls, enable_logging: bool):
         """
         The meta-llama/Llama-2-7b-hf is a private gate repo, hence we need to get access to it and authenticate using a token.
         please refer this url to get the access - https://huggingface.co/meta-llama/Llama-2-7b-hf.

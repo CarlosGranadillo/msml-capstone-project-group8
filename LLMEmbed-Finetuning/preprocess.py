@@ -25,8 +25,9 @@ class Preprocess:
         5. Seggregate the Sujet-Finance-Instruct-177k dataset according to the task types.
         6. Check for the null rows and drop them if required.
         7. Check for the duplicate rows and drop them if required.
-        8. Replace the string labels with integers in Sujet-Finance-Instruct-177k dataset.
-        9. Return the final required datasets.
+        8. Create seperate datasets for fine tuning and normal flow.
+        9. Replace the string labels with integers in Sujet-Finance-Instruct-177k dataset.
+        10. Return the final required datasets.
     """
 
     @classmethod
@@ -38,8 +39,9 @@ class Preprocess:
         cls.helpers = Helpers()
         cls.log = Logger()
         cls.temp_datasets = {}
-        cls.datasets_df = {}
         cls.enable_logging = enable_logging
+        cls.fine_tune_split_size = 0.30
+        cls.seed = 42
 
     @classmethod
     def load_datasets(cls) -> dict:
@@ -184,167 +186,230 @@ class Preprocess:
         sentiment_mapping = cls.config.get_sentiment_mapping()
         yes_no_mapping = cls.config.get_yes_no_mapping()
 
-        cls.log.log(
-            message="\t[Started] - Sentimental Analysis conversion.",
-            enable_logging=cls.enable_logging,
-        )
-        datasets["sujet_finance_sentiment_analysis"] = datasets[
-            "sujet_finance_sentiment_analysis"
-        ].map(
-            cls.helpers.replace_string_with_int,
-            fn_kwargs={"mapping": sentiment_mapping, "column_to_modify": "label"},
-        )
-        cls.log.log(
-            message=f"\t\tMapping : {sentiment_mapping}",
-            enable_logging=cls.enable_logging,
-        )
-        cls.log.log(
-            message="\t[Completed] - Sentimental Analysis conversion.",
-            enable_logging=cls.enable_logging,
-        )
+        sentiment_analysis_conversion = [
+            "sujet_finance_sentiment_analysis",
+            "sujet_finance_sentiment_analysis_fine_tuning",
+        ]
+        yes_no_question_conversion = [
+            "sujet_finance_yes_no_question",
+            "sujet_finance_yes_no_question_fine_tuning",
+        ]
 
-        cls.log.log(
-            message="\t[Started] - Yes/No question conversion.",
-            enable_logging=cls.enable_logging,
-        )
-        datasets["sujet_finance_yes_no_question"] = datasets[
-            "sujet_finance_yes_no_question"
-        ].map(
-            cls.helpers.replace_string_with_int,
-            fn_kwargs={"mapping": yes_no_mapping, "column_to_modify": "label"},
-        )
-        cls.log.log(
-            message=f"\t\tMapping : {yes_no_mapping}", enable_logging=cls.enable_logging
-        )
-        cls.log.log(
-            message="\t[Completed] - Yes/No question conversion.",
-            enable_logging=cls.enable_logging,
-        )
+        for dataset_name in sentiment_analysis_conversion:
+            cls.log.log(
+                message=f"\t[Started] - Sentiment Analysis conversion for {dataset_name} dataset.",
+                enable_logging=cls.enable_logging,
+            )
+            datasets[dataset_name] = datasets[dataset_name].map(
+                cls.helpers.replace_string_with_int,
+                fn_kwargs={"mapping": sentiment_mapping, "column_to_modify": "label"},
+            )
+            cls.log.log(
+                message=f"\t\tMapping : {sentiment_mapping}",
+                enable_logging=cls.enable_logging,
+            )
+            cls.log.log(
+                message="\t[Completed] - Sentiment Analysis conversion for {dataset_name} dataset.",
+                enable_logging=cls.enable_logging,
+            )
+
+        for dataset_name in yes_no_question_conversion:
+            cls.log.log(
+                message=f"\t[Started] - Yes/No conversion for {dataset_name} dataset.",
+                enable_logging=cls.enable_logging,
+            )
+            datasets[dataset_name] = datasets[dataset_name].map(
+                cls.helpers.replace_string_with_int,
+                fn_kwargs={"mapping": yes_no_mapping, "column_to_modify": "label"},
+            )
+            cls.log.log(
+                message=f"\t\tMapping : {yes_no_mapping}",
+                enable_logging=cls.enable_logging,
+            )
+            cls.log.log(
+                message="\t[Completed] - Yes/No conversion for {dataset_name} dataset.",
+                enable_logging=cls.enable_logging,
+            )
         return datasets
 
     @classmethod
-    def preprocess(cls) -> dict:
+    def seperate_datasets(cls, datasets) -> dict:
         """
-        This function in the starting point for the preprocessing of the datasets
+        This function seperate creates datasets for finetuning and for normal flow.
+        It also saves in local in order to avoid repeating the process.
         """
-        print("\n[Started] - Preprocessing the datasets.")
+        temp_dict = {}
+        for dataset_name, dataset in datasets.items():
+            dataset_split = dataset["train"].train_test_split(
+                test_size=cls.fine_tune_split_size, seed=cls.seed
+            )
+            fine_tuned_dataset = dataset_split["test"].shuffle(seed=cls.seed)
+            non_fine_tuned_dataset = dataset_split["train"].shuffle(seed=cls.seed)
+            temp_dict[f"{dataset_name}_fine_tuning"] = fine_tuned_dataset
+            temp_dict[f"{dataset_name}"] = non_fine_tuned_dataset
+
+        datasets.update(temp_dict)
+
+        return datasets
+
+    @classmethod
+    def read_data_from_local(cls) -> dict:
+        """
+        This function returns the datasets that are stored in a local directory.
+        """
+        datasets = {}
+        return datasets
+
+    @classmethod
+    def preprocess(cls, save_data_in_local: bool, read_data_from_local: bool) -> dict:
+        """
+        This function in the starting point for the preprocessing of the datasets and return the datasets.
+        """
         # Load the logger
         logger = cls.log
 
-        # 1. Load the financial_phrasebank and Sujet-Finance-Instruct-177k from hugging face.
-        logger.log(
-            message="\n[Started] - Load the Sujet-Finance-Instruct-177k dataset.",
-            enable_logging=cls.enable_logging,
-        )
-        cls.temp_datasets = cls.load_datasets()
-        logger.log(
-            message="[Completed] - Load the Sujet-Finance-Instruct-177k dataset.",
-            enable_logging=cls.enable_logging,
-        )
+        print("\n[Started] - Preprocessing the datasets.")
+        if read_data_from_local:
+            logger.log(
+                message="\n[Started] - Load the Sujet-Finance-Instruct-177k dataset.",
+                enable_logging=cls.enable_logging,
+            )
+            datasets = read_data_from_local()
+            return datasets
+        else:
+            # 1. Load the financial_phrasebank and Sujet-Finance-Instruct-177k from hugging face.
+            logger.log(
+                message="\n[Started] - Load the Sujet-Finance-Instruct-177k dataset from hugging face.",
+                enable_logging=cls.enable_logging,
+            )
+            cls.temp_datasets = cls.load_datasets()
+            logger.log(
+                message="[Completed] - Load the Sujet-Finance-Instruct-177k dataset from hugging face.",
+                enable_logging=cls.enable_logging,
+            )
 
-        ## Convert the datasets into pandas dataframe
-        logger.log(
-            message="\n[Started] - Convert the Sujet-Finance-Instruct-177k dataset to pandas dataframe.",
-            enable_logging=cls.enable_logging,
-        )
-        cls.datasets_df = cls.convert_to_pandas_df()
-        logger.log(
-            message="[Completed] - Convert the Sujet-Finance-Instruct-177k dataset to pandas dataframe.",
-            enable_logging=cls.enable_logging,
-        )
+            # 2. Filter out the selected task types from the Sujet-Finance-Instruct-177k dataset.
+            logger.log(
+                message="\n[Started] - Select the task types in the Sujet-Finance-Instruct-177k dataset.",
+                enable_logging=cls.enable_logging,
+            )
+            cls.temp_datasets["sujet_finance"] = cls.select_task_types_columns(
+                dataset=cls.temp_datasets["sujet_finance"]
+            )
+            logger.log(
+                message="[Completed] - Select the task types in the Sujet-Finance-Instruct-177k dataset.",
+                enable_logging=cls.enable_logging,
+            )
 
-        # 2. Filter out the selected task types from the Sujet-Finance-Instruct-177k dataset.
-        logger.log(
-            message="\n[Started] - Select the task types in the Sujet-Finance-Instruct-177k dataset.",
-            enable_logging=cls.enable_logging,
-        )
-        cls.temp_datasets["sujet_finance"] = cls.select_task_types_columns(
-            dataset=cls.temp_datasets["sujet_finance"]
-        )
-        logger.log(
-            message="[Completed] - Select the task types in the Sujet-Finance-Instruct-177k dataset.",
-            enable_logging=cls.enable_logging,
-        )
+            # 3. Convert the labels, texts into lowercase in Sujet-Finance-Instruct-177k dataset.
+            logger.log(
+                message="\n[Started] - Convert the column vaules to lower case in the Sujet-Finance-Instruct-177k dataset.",
+                enable_logging=cls.enable_logging,
+            )
+            cls.temp_datasets = cls.convert_lower_case(datasets=cls.temp_datasets)
+            logger.log(
+                message="[Completed] - Convert the column vaules to lower case in the Sujet-Finance-Instruct-177k dataset.",
+                enable_logging=cls.enable_logging,
+            )
 
-        # 3. Convert the labels, texts into lowercase in Sujet-Finance-Instruct-177k dataset.
-        logger.log(
-            message="\n[Started] - Convert the column vaules to lower case in the Sujet-Finance-Instruct-177k dataset.",
-            enable_logging=cls.enable_logging,
-        )
-        cls.temp_datasets = cls.convert_lower_case(datasets=cls.temp_datasets)
-        logger.log(
-            message="[Completed] - Convert the column vaules to lower case in the Sujet-Finance-Instruct-177k dataset.",
-            enable_logging=cls.enable_logging,
-        )
+            # 4. Rename column names in Sujet-Finance-Instruct-177k dataset.
+            logger.log(
+                message="\n[Started] - Rename the column names in the Sujet-Finance-Instruct-177k dataset.",
+                enable_logging=cls.enable_logging,
+            )
+            cls.temp_datasets = cls.rename_column_names(datasets=cls.temp_datasets)
+            logger.log(
+                message="[Completed] - Rename the column names in the Sujet-Finance-Instruct-177k dataset.",
+                enable_logging=cls.enable_logging,
+            )
 
-        # 4. Rename column names in Sujet-Finance-Instruct-177k dataset.
-        logger.log(
-            message="\n[Started] - Rename the column names in the Sujet-Finance-Instruct-177k dataset.",
-            enable_logging=cls.enable_logging,
-        )
-        cls.temp_datasets = cls.rename_column_names(datasets=cls.temp_datasets)
-        logger.log(
-            message="[Completed] - Rename the column names in the Sujet-Finance-Instruct-177k dataset.",
-            enable_logging=cls.enable_logging,
-        )
+            # 5. Seggregate the Sujet-Finance-Instruct-177k dataset according to the task types.
+            logger.log(
+                message="\n[Started] - Seggregate the data sets based on task types in the Sujet-Finance-Instruct-177k dataset.",
+                enable_logging=cls.enable_logging,
+            )
+            cls.temp_datasets = cls.seggregate_sujet_task_types(
+                datasets=cls.temp_datasets
+            )
+            logger.log(
+                message="[Completed] - Seggregate the data sets based on task types in the Sujet-Finance-Instruct-177k dataset.",
+                enable_logging=cls.enable_logging,
+            )
 
-        # 5. Seggregate the Sujet-Finance-Instruct-177k dataset according to the task types.
-        logger.log(
-            message="\n[Started] - Seggregate the data sets based on task types in the Sujet-Finance-Instruct-177k dataset.",
-            enable_logging=cls.enable_logging,
-        )
-        cls.temp_datasets = cls.seggregate_sujet_task_types(datasets=cls.temp_datasets)
-        logger.log(
-            message="[Completed] - Seggregate the data sets based on task types in the Sujet-Finance-Instruct-177k dataset.",
-            enable_logging=cls.enable_logging,
-        )
+            # 6. Check for the null rows and drop them if required.
+            logger.log(
+                message="\n[Started] - Remove null rows from the datasets.",
+                enable_logging=cls.enable_logging,
+            )
+            cls.temp_datasets = cls.drop_null_rows(datasets=cls.temp_datasets)
+            logger.log(
+                message="[Completed] - Remove null rows from the datasets.",
+                enable_logging=cls.enable_logging,
+            )
 
-        # 6. Check for the null rows and drop them if required.
-        logger.log(
-            message="\n[Started] - Remove null rows from the datasets.",
-            enable_logging=cls.enable_logging,
-        )
-        cls.temp_datasets = cls.drop_null_rows(datasets=cls.temp_datasets)
-        logger.log(
-            message="[Completed] - Remove null rows from the datasets.",
-            enable_logging=cls.enable_logging,
-        )
+            # 7. Check for the duplicate rows and drop them if required.
+            logger.log(
+                message="\n[Started] - Remove duplicate rows from the datasets.",
+                enable_logging=cls.enable_logging,
+            )
+            cls.temp_datasets = cls.drop_duplicate_rows(datasets=cls.temp_datasets)
+            logger.log(
+                message="[Completed] - Remove duplicate rows from the datasets.",
+                enable_logging=cls.enable_logging,
+            )
 
-        # 7. Check for the duplicate rows and drop them if required.
-        logger.log(
-            message="\n[Started] - Remove duplicate rows from the datasets.",
-            enable_logging=cls.enable_logging,
-        )
-        cls.temp_datasets = cls.drop_duplicate_rows(datasets=cls.temp_datasets)
-        logger.log(
-            message="[Completed] - Remove duplicate rows from the datasets.",
-            enable_logging=cls.enable_logging,
-        )
+            # 8. Create seperate datasets for fine tuning and normal flow.
+            logger.log(
+                message="\n[Started] - Create seperate datasets for fine tuning and normal flow.",
+                enable_logging=cls.enable_logging,
+            )
+            cls.temp_datasets = cls.seperate_datasets(datasets=cls.temp_datasets)
+            logger.log(
+                message="[Completed] - Create seperate datasets for fine tuning and normal flow",
+                enable_logging=cls.enable_logging,
+            )
 
-        # 8. Replace the string labels with integers in Sujet-Finance-Instruct-177k dataset.
-        logger.log(
-            message="\n[Started] - Convert the string labels to integers in the Sujet-Finance-Instruct-177k dataset.",
-            enable_logging=cls.enable_logging,
-        )
-        cls.temp_datasets = cls.convert_string_labels_to_integers(
-            datasets=cls.temp_datasets
-        )
-        logger.log(
-            message="[Completed] - Convert the string labels to integers in the Sujet-Finance-Instruct-177k dataset.",
-            enable_logging=cls.enable_logging,
-        )
+            # 9. Replace the string labels with integers in Sujet-Finance-Instruct-177k dataset.
+            logger.log(
+                message="\n[Started] - Convert the string labels to integers in the Sujet-Finance-Instruct-177k dataset.",
+                enable_logging=cls.enable_logging,
+            )
+            cls.temp_datasets = cls.convert_string_labels_to_integers(
+                datasets=cls.temp_datasets
+            )
+            logger.log(
+                message="[Completed] - Convert the string labels to integers in the Sujet-Finance-Instruct-177k dataset.",
+                enable_logging=cls.enable_logging,
+            )
 
-        # 9. Return the final required datasets.
-        datasets = {
-            "sujet_finance": cls.temp_datasets["sujet_finance"]["train"],
-            "sentimental_analysis": cls.temp_datasets[
-                "sujet_finance_sentiment_analysis"
-            ]["train"],
-            "yes_no_question": cls.temp_datasets["sujet_finance_yes_no_question"][
-                "train"
-            ],
-        }
+            # 10. Return the final required datasets.
+            datasets = {
+                "sujet_finance": cls.temp_datasets["sujet_finance"],
+                "sentimental_analysis": cls.temp_datasets[
+                    "sujet_finance_sentiment_analysis"
+                ],
+                "yes_no_question": cls.temp_datasets["sujet_finance_yes_no_question"],
+                "sujet_finance_fine_tuning": cls.temp_datasets[
+                    "sujet_finance_fine_tuning"
+                ],
+                "sentimental_analysis_finetuning": cls.temp_datasets[
+                    "sujet_finance_sentiment_analysis_fine_tuning"
+                ],
+                "yes_no_question_fine_tuning": cls.temp_datasets[
+                    "sujet_finance_yes_no_question_fine_tuning"
+                ],
+            }
+            if save_data_in_local:
+                for dataset_name, dataset in datasets.items():
+                    logger.log(
+                        message=f"\t[Started] - Saving the {dataset_name} dataset to local directory.",
+                        enable_logging=cls.enable_logging,
+                    )
+                    cls.helpers.save_dataset_to_local(dataset=dataset)
+                    logger.log(
+                        message=f"\t[Completed] - Saving the {dataset_name} dataset to local directory.",
+                        enable_logging=cls.enable_logging,
+                    )
 
+            return datasets
         print("\n[Completed] - Preprocessing the datasets.")
-
-        return datasets

@@ -10,10 +10,12 @@ from datasets import Dataset, concatenate_datasets
 # Local Imports
 from config import Config
 
+
 class Helpers:
     """
     This class contains all the helper methods that are used in this project
     """
+
     @classmethod
     def __init__(cls):
         cls.config = Config()
@@ -64,3 +66,11 @@ class Helpers:
             sentences_embeds.to("cpu"), save_path + file_path + f"{mode}_texts.pt"
         )
         torch.save(labels, save_path + file_path + f"{mode}_labels.pt")
+
+    @classmethod
+    def save_dataset_to_local(cls, dataset):
+        """
+        This method will save the dataset to a local folder inorder to reuse.
+        """
+        save_path = cls.config.get_base_path()
+        dataset.save_to_disk(save_path)
