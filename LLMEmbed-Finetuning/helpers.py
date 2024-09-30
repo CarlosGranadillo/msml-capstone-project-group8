@@ -23,7 +23,7 @@ class Helpers:
     @classmethod
     def convert_column_to_lowercase(cls, example, column_to_lowercase: str) -> str:
         """
-        This method converts the column values into lowercase.
+            This method converts the column values into lowercase.
         """
         example[column_to_lowercase] = example[column_to_lowercase].lower()
         return example
@@ -41,7 +41,7 @@ class Helpers:
     @classmethod
     def concatenate_sentimental_analysis_datasets(cls, dataset1, dataset2):
         """
-        This method will concatenate the two datasets with same structure.
+            This method will concatenate the two datasets with same structure.
         """
         print("\n[Started] - Concatenation of the datasets")
         dataset1_df = dataset1["train"].to_pandas()
@@ -57,9 +57,9 @@ class Helpers:
         cls, sentences_embeds: list, labels: list, file_path: str, mode: str
     ):
         """
-        This method saves the embeddings in a local folder
+            This method saves the embeddings in a local folder
         """
-        save_path = cls.config.get_base_path()
+        save_path = cls.config.get_base_path() + "embeddings/"
         if not os.path.exists(save_path + file_path):
             os.makedirs(save_path + file_path)
         torch.save(
@@ -68,9 +68,11 @@ class Helpers:
         torch.save(labels, save_path + file_path + f"{mode}_labels.pt")
 
     @classmethod
-    def save_dataset_to_local(cls, dataset):
+    def save_dataset(cls, dataset, file_name : str):
         """
         This method will save the dataset to a local folder inorder to reuse.
         """
-        save_path = cls.config.get_base_path()
-        dataset.save_to_disk(save_path)
+        save_path = cls.config.get_base_path() + "data/"
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        dataset.save_to_disk(save_path + file_name)

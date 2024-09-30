@@ -405,7 +405,7 @@ class Preprocess:
                         message=f"\t[Started] - Saving the {dataset_name} dataset to local directory.",
                         enable_logging=cls.enable_logging,
                     )
-                    cls.helpers.save_dataset_to_local(dataset=dataset)
+                    cls.helpers.save_dataset(dataset=dataset, file_name=dataset_name)
                     logger.log(
                         message=f"\t[Completed] - Saving the {dataset_name} dataset to local directory.",
                         enable_logging=cls.enable_logging,

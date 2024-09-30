@@ -56,7 +56,7 @@ class Data(Dataset):
                 )
                 cls.data[f"{task}_{mode}_data"] = cls.load_data(task=task, mode=mode)
                 cls.log.log(
-                    message=f"\n[Completed] - Load the {task} {mode} data emebeddings.",
+                    message=f"[Completed] - Load the {task} {mode} data emebeddings.",
                     enable_logging=cls.enable_logging,
                 )
 

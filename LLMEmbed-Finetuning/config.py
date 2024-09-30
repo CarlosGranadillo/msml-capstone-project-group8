@@ -82,7 +82,7 @@ class Config:
         """
         This function returns the path for the embeddings to be stored.
         """
-        path = "/home/exouser/Desktop/msml-group8-code-base/embeddings/"  # change it to a desired path
+        path = "/home/exouser/Desktop/msml-group8-code-base/"  # change it to a desired path
         return path
 
     @classmethod
@@ -90,7 +90,7 @@ class Config:
         """
         This function returns the paths where the embeddings are stored for the LLM's.
         """
-        base_path = cls.get_base_path()
+        base_path = cls.get_base_path() + "embeddings/"
         l_path = base_path + f"llama2_embeddings/{task}/dataset_tensors/{mode}_texts.pt"
         b_path = base_path + f"bert_embeddings/{task}/dataset_tensors/{mode}_texts.pt"
         r_path = (
