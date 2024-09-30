@@ -48,80 +48,77 @@ class Embeddings:
         tasks = cls.config.get_selected_task_types()
 
         for dataset_name, dataset in datasets.items():
-            if dataset_name in tasks:
-                sentences = dataset["text"]
-                labels = dataset["label"]
-                (
-                    sentences_train,
-                    sentences_test,
-                    labels_train,
-                    labels_test,
-                ) = train_test_split(sentences, labels, test_size=0.2, random_state=42)
+            sentences = dataset["text"]
+            labels = dataset["label"]
+            # Train-test split
+            (
+                sentences_train,
+                sentences_test,
+                labels_train,
+                labels_test,
+            ) = train_test_split(sentences, labels, test_size=0.2, random_state=42)
 
-                for task in tasks:
-                    # Bert Training data emebeddings extraction
-                    cls.embeddings[f"bert_{task}_train_embeddings"] = (
-                        cls.bert.extract_bert_embeddings(
-                            mode="train",
-                            device=cls.device,
-                            sentences=sentences_train,
-                            labels=labels_train,
-                            task=task,
-                        )
-                    )
-                    # Bert Testing data emebeddings extraction
-                    cls.embeddings[f"bert_{task}_test_embeddings"] = (
-                        cls.bert.extract_bert_embeddings(
-                            mode="test",
-                            device=cls.device,
-                            sentences=sentences_test,
-                            labels=labels_test,
-                            task=task,
-                        )
-                    )
+            # Bert Training data emebeddings extraction
+            cls.embeddings[f"bert_{dataset_name}_train_embeddings"] = (
+                cls.bert.extract_bert_embeddings(
+                    mode="train",
+                    device=cls.device,
+                    sentences=sentences_train,
+                    labels=labels_train,
+                    task=dataset_name,
+                )
+            )
+            # Bert Testing data emebeddings extraction
+            cls.embeddings[f"bert_{dataset_name}_test_embeddings"] = (
+                cls.bert.extract_bert_embeddings(
+                    mode="test",
+                    device=cls.device,
+                    sentences=sentences_test,
+                    labels=labels_test,
+                    task=dataset_name,
+                )
+            )
+            # Roberta Training emebeddings extraction
+            cls.embeddings[f"roberta_{dataset_name}_train_embeddings"] = (
+                cls.roberta.extract_roberta_embeddings(
+                    mode="train",
+                    device=cls.device,
+                    sentences=sentences_train,
+                    labels=labels_train,
+                    task=dataset_name,
+                )
+            )
+            # Roberta Testing emebeddings extraction
+            cls.embeddings[f"roberta_{dataset_name}_test_embeddings"] = (
+                cls.roberta.extract_roberta_embeddings(
+                    mode="test",
+                    device=cls.device,
+                    sentences=sentences_test,
+                    labels=labels_test,
+                    task=dataset_name,
+                )
+            )
 
-                for task in tasks:
-                    # Roberta Training emebeddings extraction
-                    cls.embeddings[f"roberta_{task}_train_embeddings"] = (
-                        cls.roberta.extract_roberta_embeddings(
-                            mode="train",
-                            device=cls.device,
-                            sentences=sentences_train,
-                            labels=labels_train,
-                            task=task,
-                        )
-                    )
-                    # Roberta Testing emebeddings extraction
-                    cls.embeddings[f"roberta_{task}_test_embeddings"] = (
-                        cls.roberta.extract_roberta_embeddings(
-                            mode="test",
-                            device=cls.device,
-                            sentences=sentences_test,
-                            labels=labels_test,
-                            task=task,
-                        )
-                    )
-                for task in tasks:
-                    # Llama Training emebeddings extraction
-                    cls.embeddings[f"llama_{task}_train_embeddings"] = (
-                        cls.llama2.extract_llama2_embeddings(
-                            mode="train",
-                            device=cls.device,
-                            sentences=sentences_train,
-                            labels=labels_train,
-                            task=task,
-                        )
-                    )
-                    # Llama Testing emebeddings extraction
-                    cls.embeddings[f"llama_{task}_test_embeddings"] = (
-                        cls.llama2.extract_llama2_embeddings(
-                            mode="test",
-                            device=cls.device,
-                            sentences=sentences_test,
-                            labels=labels_test,
-                            task=task,
-                        )
-                    )
+            # Llama Training emebeddings extraction
+            cls.embeddings[f"llama_{dataset_name}_train_embeddings"] = (
+                cls.llama2.extract_llama2_embeddings(
+                    mode="train",
+                    device=cls.device,
+                    sentences=sentences_train,
+                    labels=labels_train,
+                    task=dataset_name,
+                )
+            )
+            # Llama Testing emebeddings extraction
+            cls.embeddings[f"llama_{dataset_name}_test_embeddings"] = (
+                cls.llama2.extract_llama2_embeddings(
+                    mode="test",
+                    device=cls.device,
+                    sentences=sentences_test,
+                    labels=labels_test,
+                    task=dataset_name,
+                )
+            )
 
         print("[Completed] -  Embeddings extraction.")
 

@@ -10,6 +10,7 @@ from dataset import Data
 # General Imports
 import os
 import warnings
+import torch
 
 warnings.filterwarnings("ignore")
 
@@ -29,6 +30,9 @@ def main(
         3. Run the base downstream model on the extracted embeddings.
         4.
     """
+    # Clear CUDA Cache
+    print("Clearing CUDA Cache")
+    torch.cuda.empty_cache()
     # 1. Preprocess the datasets
     if preprocess:
         datasets = Preprocess(debug).preprocess(
@@ -39,24 +43,28 @@ def main(
         print(
             "\n----------------------------------Skipping Preprocessing--------------------------------------------------------"
         )
-    print(datasets)
+
     # 2. Extract the embeddings
     if extract:
-        embeddings = Embeddings(debug).extract(datasets=datasets)
+        datasets_to_extract_embeddings = {
+            "sentiment_analysis": datasets["sentiment_analysis"],
+            "yes_no_question": datasets["yes_no_question"],
+        }
+        embeddings = Embeddings(debug).extract(datasets=datasets_to_extract_embeddings)
     else:
         print(
             "\n----------------------------------Skipping Embeddings Extraction-----------------------------------------------"
         )
-
+        
     # 3. Run the downstream model on the extracted embeddings
-    data = Data(debug).extract_data()
+    # data = Data(debug).extract_data()
 
 
 if __name__ == "__main__":
     main(
-        debug=False,
+        debug=True,
         preprocess=True,
-        extract=False,
+        extract=True,
         save_data_in_local=False,
         read_data_from_local=True,
     )
