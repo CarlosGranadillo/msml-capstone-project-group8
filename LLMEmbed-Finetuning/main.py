@@ -54,7 +54,7 @@ def main(
 
 if __name__ == "__main__":
     main(
-        debug=True,
+        debug=False,
         preprocess=True,
         extract=False,
         save_data_in_local=False,

@@ -83,13 +83,14 @@ class Helpers:
         else:
             dataset.save_to_disk(file_path)
 
-        
-    
     @classmethod
     def read_dataset_from_local(cls, dataset_name : str):
         """
             This dataset loads the data from a local directory.
         """
         load_path = cls.config.get_base_path() + "data/" + dataset_name
+        if not os.path.exists(load_path):
+            raise Exception(f"{load_path} does not exists. Please save the data to local again.")
+            return
         dataset = load_from_disk(load_path)
         return dataset
