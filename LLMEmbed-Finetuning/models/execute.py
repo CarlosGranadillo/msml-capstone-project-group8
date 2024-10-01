@@ -7,11 +7,13 @@ from config import Config
 from helpers import Helpers
 from logger import Logger
 from models import DownstreamModel
+from dataset import Data
 
 # General Imports
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, f1_score
 from tqdm import tqdm
 import numpy as np
@@ -199,12 +201,12 @@ class Execute:
         accuracy = accuracy_score(total_y, total_pred)
         f1 = f1_score(total_y, total_pred)
 
-        cls.validation_metrics[f"{task}_train"]["loss"] = round(avg_loss, 4)
-        cls.validation_metrics[f"{task}_train"]["accuracy"] = round(accuracy, 4)
-        cls.validation_metrics[f"{task}_train"]["f1_score"] = round(f1, 4)
+        cls.validation_metrics[f"{task}_test"]["loss"] = round(avg_loss, 4)
+        cls.validation_metrics[f"{task}_test"]["accuracy"] = round(accuracy, 4)
+        cls.validation_metrics[f"{task}_test"]["f1_score"] = round(f1, 4)
 
     @classmethod
-    def execute(cls, data) -> dict:
+    def execute(cls) -> dict:
         """
         The method executes the classification tasks and returns the validation metrics respectively.
         """
@@ -219,7 +221,40 @@ class Execute:
             model = DownstreamModel(class_num, cls.SIGMA).to(cls.device)
             loss_fn = nn.CrossEntropyLoss().to(cls.device)
             optimizer = optim.Adam(model.parameters(), cls.lr)
-
+            logger.log(
+                message=f"\n[Started] - Loading {task} train embeddings from local.",
+                enable_logging=cls.enable_logging,
+            )
+            train_data = Data(
+                task=task, mode="train", enable_logging=cls.enable_logging
+            )
+            train_loader = DataLoader(
+                train_data,
+                batch_size=cls.batch_size,
+                shuffle=True,
+                num_workers=4,
+                pin_memory=True,
+            )
+            logger.log(
+                message=f"[Completed] - Loading {task} train embeddings from local.",
+                enable_logging=cls.enable_logging,
+            )
+            logger.log(
+                message=f"\n[Started] - Loading {task} tes embeddings from local.",
+                enable_logging=cls.enable_logging,
+            )
+            test_data = Data(task=task, mode="test", enable_logging=cls.enable_logging)
+            test_loader = DataLoader(
+                test_data,
+                batch_size=cls.batch_size,
+                shuffle=False,
+                num_workers=4,
+                pin_memory=True,
+            )
+            logger.log(
+                message=f"[Completed] - Loading {task} test embeddings from local.",
+                enable_logging=cls.enable_logging,
+            )
             if class_num > 2:
                 logger.log(
                     message=f"\n[Started] - {task} - Training",
@@ -231,11 +266,11 @@ class Execute:
                         f"--------------------------- Epoch {epoch+1}/{cls.epochs} ---------------------------"
                     )
                     cls.train_multi_class(
-                        dataloader=data["sentiment_analysis_train_data"],
+                        dataloader=train_loader,
                         model=model,
                         loss_fn=loss_fn,
                         optimizer=optimizer,
-                        task=task
+                        task=task,
                     )
                 logger.log(
                     message=f"[Completed] - {task} - Training",
@@ -247,10 +282,7 @@ class Execute:
                 )
 
                 cls.test_multi_class(
-                    dataloader=data["sentiment_analysis_test_data"],
-                    model=model,
-                    loss_fn=loss_fn,
-                    task=task
+                    dataloader=test_loader, model=model, loss_fn=loss_fn, task=task
                 )
                 logger.log(
                     message=f"[Completed] - {task} - Testing",
@@ -267,11 +299,11 @@ class Execute:
                         f"--------------------------- Epoch {epoch+1}/{cls.epochs} ---------------------------"
                     )
                     cls.train(
-                        dataloader=data["yes_no_question_train_data"],
+                        dataloader=train_loader,
                         model=model,
                         loss_fn=loss_fn,
                         optimizer=optimizer,
-                        task=task
+                        task=task,
                     )
                 logger.log(
                     message=f"[Completed] - {task} - Training",
@@ -283,10 +315,7 @@ class Execute:
                     enable_logging=cls.enable_logging,
                 )
                 cls.test(
-                    dataloader=data["yes_no_question_test_data"],
-                    model=model,
-                    loss_fn=loss_fn,
-                    task=task
+                    dataloader=test_loader, model=model, loss_fn=loss_fn, task=task
                 )
                 logger.log(
                     message=f"[Completed] - {task} - Testing",

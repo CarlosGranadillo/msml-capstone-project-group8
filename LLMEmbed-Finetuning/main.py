@@ -12,6 +12,7 @@ from dataset import Data
 import os
 import warnings
 import torch
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 
@@ -58,9 +59,9 @@ def main(
         )
 
     # 3. Run the downstream model on the extracted embeddings
-    data = Data(debug).extract_data()
-    metrics = Execute(debug).execute(data=data)
-    print(metrics)
+    metrics = Execute(debug).execute()
+    df = pd.DataFrame.from_dict(metrics, orient="index")
+    print(df)
 
 
 if __name__ == "__main__":

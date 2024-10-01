@@ -4,7 +4,7 @@
 
 # General Imports
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 
 # Local Imports
 from config import Config
@@ -17,47 +17,35 @@ class Data(Dataset):
     """
 
     @classmethod
-    def __init__(cls, enable_logging: bool):
+    def __init__(cls, task: str, mode: str, enable_logging: bool):
         """
-        This method inializes the instances and other variable
+        This method inializes the instances and other variables and load embeddings.
         """
         cls.config = Config()
         cls.log = Logger()
         cls.enable_logging = enable_logging
         cls.data = {}
-
-    @classmethod
-    def load_data(cls, task: str, mode: str) -> tuple:
-        """
-        This method loads the embedding extracted based on task and mode (train/test)
-        """
         (
             l_sentences_path,
             b_sentences_path,
             r_sentences_path,
             labels_path,
         ) = cls.config.get_embeddings_path(task=task, mode=mode)
-        l_sentences_reps = torch.load(l_sentences_path)
-        b_sentences_reps = torch.load(b_sentences_path)
-        r_sentences_reps = torch.load(r_sentences_path)
-        labels = torch.load(labels_path)
-        return l_sentences_reps, b_sentences_reps, r_sentences_reps, labels
 
-    @classmethod
-    def extract_data(cls) -> dict:
-        """
-        This method returns the train and test datasets for tasks and modes
-        """
-        for task in cls.config.get_selected_task_types():
-            for mode in cls.config.get_modes():
-                cls.log.log(
-                    message=f"\n[Started] - Load the {task} {mode} data emebeddings.",
-                    enable_logging=cls.enable_logging,
-                )
-                cls.data[f"{task}_{mode}_data"] = cls.load_data(task=task, mode=mode)
-                cls.log.log(
-                    message=f"[Completed] - Load the {task} {mode} data emebeddings.",
-                    enable_logging=cls.enable_logging,
-                )
+        cls.l_sentences_reps = torch.load(l_sentences_path)
+        cls.b_sentences_reps = torch.load(b_sentences_path)
+        cls.r_sentences_reps = torch.load(r_sentences_path)
+        cls.labels = torch.load(labels_path)
 
-        return cls.data
+        cls.sample_num = cls.labels.shape[0]
+
+    def __getitem__(cls, index):
+        return (
+            cls.l_sentences_reps[index],
+            cls.b_sentences_reps[index],
+            cls.r_sentences_reps[index],
+            cls.labels[index],
+        )
+
+    def __len__(cls):
+        return cls.sample_num
