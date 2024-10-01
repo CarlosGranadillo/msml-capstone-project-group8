@@ -5,6 +5,7 @@
 # Local Imports
 from preprocess import Preprocess
 from embeddings import Embeddings
+from models.execute import Execute
 from dataset import Data
 
 # General Imports
@@ -58,13 +59,14 @@ def main(
 
     # 3. Run the downstream model on the extracted embeddings
     data = Data(debug).extract_data()
-    return data
+    metrics = Execute(debug).execute(data=data)
+    print(metrics)
 
 
 if __name__ == "__main__":
     main(
         debug=True,
-        preprocess=True,
+        preprocess=False,
         extract=False,
         save_data_in_local=False,
         read_data_from_local=True,

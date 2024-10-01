@@ -132,3 +132,11 @@ class Config:
             "yes_no_question_fine_tuning",
         ]
         return names
+
+    @classmethod
+    def get_no_of_classes(cls) -> dict:
+        """
+        This function return the number of classes per task
+        """
+        classes = {"sentiment_analysis": 5, "yes_no_question": 2}
+        return classes
