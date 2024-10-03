@@ -5,16 +5,25 @@
 # Local Imports
 from preprocess import Preprocess
 from embeddings import Embeddings
+from models.execute import Execute
 from dataset import Data
 
 # General Imports
 import os
 import warnings
+import torch
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 
 
-def main(debug: bool = False, preprocess: bool = True, extract: bool = True):
+def main(
+    debug: bool,
+    preprocess: bool,
+    extract: bool,
+    save_data_in_local: bool,
+    read_data_from_local: bool,
+):
     """
     This method is the starting point for the project. It performs the following tasks -
         1. Preprocess the datasets.
@@ -23,23 +32,43 @@ def main(debug: bool = False, preprocess: bool = True, extract: bool = True):
         3. Run the base downstream model on the extracted embeddings.
         4.
     """
+    # Clear CUDA Cache
+    print("Clearing CUDA Cache")
+    torch.cuda.empty_cache()
     # 1. Preprocess the datasets
     if preprocess:
-        datasets = Preprocess(debug).preprocess()
+        datasets = Preprocess(debug).preprocess(
+            save_data_in_local=save_data_in_local,
+            read_data_from_local=read_data_from_local,
+        )
     else:
         print(
-            "----------------------------------Skipping Preprocessing--------------------------------------------------------"
+            "\n----------------------------------Skipping Preprocessing--------------------------------------------------------"
         )
+
     # 2. Extract the embeddings
     if extract:
-        embeddings = Embeddings(debug).extract(datasets=datasets)
+        datasets_to_extract_embeddings = {
+            "sentiment_analysis": datasets["sentiment_analysis"],
+            "yes_no_question": datasets["yes_no_question"],
+        }
+        embeddings = Embeddings(debug).extract(datasets=datasets_to_extract_embeddings)
     else:
         print(
-            "----------------------------------Skipping Embeddings Extraction-----------------------------------------------"
+            "\n----------------------------------Skipping Embeddings Extraction-----------------------------------------------"
         )
 
     # 3. Run the downstream model on the extracted embeddings
-    data = Data(debug).extract_data()
+    metrics = Execute(debug).execute()
+    df = pd.DataFrame.from_dict(metrics, orient="index")
+    print(df)
+
 
 if __name__ == "__main__":
-    main(debug=False, preprocess=False, extract=False)
+    main(
+        debug=True,
+        preprocess=False,
+        extract=False,
+        save_data_in_local=False,
+        read_data_from_local=True,
+    )

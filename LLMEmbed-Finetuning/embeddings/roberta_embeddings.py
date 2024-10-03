@@ -20,14 +20,14 @@ class Roberta:
     """
 
     @classmethod
-    def __init__(cls, enable_logging : bool):
+    def __init__(cls, enable_logging: bool):
         """
         This method initialized the variables that are used in this class
         """
         cls.config = Config()
         cls.log = Logger()
         cls.helpers = Helpers()
-        cls.model_name = "distilroberta-base"
+        cls.model_name = "FacebookAI/roberta-large"
         cls.device = cls.config.get_device()
         cls.enable_logging = enable_logging
 
@@ -103,4 +103,4 @@ class Roberta:
             message=f"[Completed] - Performing embeddings extraction using {cls.model_name} for {task} on {mode} data.",
             enable_logging=cls.enable_logging,
         )
-        return sentences_reps
+        return sentences_reps, labels
