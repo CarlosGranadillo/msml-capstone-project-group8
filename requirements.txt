@@ -8,3 +8,7 @@ huggingface
 huggingface-hub
 scikit-learn
 accelerate
+bitsandbytes
+peft
+trl
+tensorboard
