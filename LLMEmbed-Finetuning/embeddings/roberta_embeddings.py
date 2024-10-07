@@ -6,11 +6,11 @@
 from config import Config
 from logger import Logger
 from helpers import Helpers
+from models.model import LLM
 
 # General Imports
 import os
 import torch
-from transformers import RobertaTokenizer, RobertaModel
 from tqdm import trange
 
 
@@ -27,29 +27,21 @@ class Roberta:
         cls.config = Config()
         cls.log = Logger()
         cls.helpers = Helpers()
+        cls.llm = LLM(enable_logging=enable_logging)
         cls.model_name = "FacebookAI/roberta-large"
         cls.device = cls.config.get_device()
         cls.enable_logging = enable_logging
 
         cls.log.log(
-            message=f"\n[Started] - Loading the tokenizer for the {cls.model_name} LLM model from hugging face.",
+            message=f"\n[Started] - Loading the tokenizer, model for the {cls.model_name} LLM model from hugging face.",
             enable_logging=enable_logging,
         )
-        cls.tokenizer = RobertaTokenizer.from_pretrained(cls.model_name)
+        cls.tokenizer, cls.model = cls.llm.get_roberta()
         cls.log.log(
-            message=f"[Completed] - Loading the tokenizer for the {cls.model_name} LLM model from hugging face.",
+            message=f"[Completed] - Loading the tokenizer, model for the {cls.model_name} LLM model from hugging face.",
             enable_logging=enable_logging,
         )
 
-        cls.log.log(
-            message=f"\n[Started] - Loading the {cls.model_name} LLM model from hugging face.",
-            enable_logging=enable_logging,
-        )
-        cls.model = RobertaModel.from_pretrained(cls.model_name).to(cls.device)
-        cls.log.log(
-            message=f"[Completed] - Loading the {cls.model_name} LLM model from hugging face.",
-            enable_logging=enable_logging,
-        )
         cls.max_length = 128
         cls.model.eval()
 

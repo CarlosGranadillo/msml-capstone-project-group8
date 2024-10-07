@@ -66,9 +66,9 @@ def main(
 
 if __name__ == "__main__":
     main(
-        debug=True,
-        preprocess=False,
-        extract=False,
-        save_data_in_local=False,
-        read_data_from_local=True,
+        debug=True,  # True, if we want to enable debugging, else False.
+        preprocess=False,  # True, if we want to preprocess the data from hugging face, else False.
+        save_data_in_local=False,  # True, if we want save the huggingface datasets in local, else False.
+        read_data_from_local=True,  # True, if we want to read the data saveed in local, else False.
+        extract=False,  # True, if we want to extract the embeddings and save it in local, False, if we want to load the embeddings saved in the local
     )

@@ -1,11 +1,19 @@
 """
-    This module contains the downstream model used in the LLMEmbed.
+    This module contains the models used in the LLMEmbed.
 """
 
 # General Imports
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from transformers import BertTokenizer, BertModel
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
+from transformers import RobertaTokenizer, RobertaModel
+from huggingface_hub import login
+
+# Local Imports
+from config import Config
+from logger import Logger
 
 
 class DownstreamModel(nn.Module):
@@ -71,3 +79,84 @@ class DownstreamModel(nn.Module):
         output = self.softmax(output)
 
         return output
+
+
+class LLM:
+    """
+    This class contains the LLM models used for the embedding extraction.
+    """
+
+    @classmethod
+    def __init__(cls, enable_logging: bool):
+        cls.config = Config()
+        cls.log = Logger()
+        cls.enable_logging = enable_logging
+        cls.device = cls.config.get_device()
+        cls.login_token = cls.config.get_hugging_face_token()
+        cls.bert_model_name = "google-bert/bert-large-uncased"
+        cls.llama2_model_name = "meta-llama/Llama-2-7b-chat-hf"
+        cls.roberta_model_name = "FacebookAI/roberta-large"
+
+    @classmethod
+    def model_repo_login(cls):
+        """
+        The meta-llama/Llama-2-7b-hf is a private gate repo, hence we need to get access to it and authenticate using a token.
+        please refer this url to get the access - https://huggingface.co/meta-llama/Llama-2-7b-hf.
+        After getting the access please generate a token and authenticate the model.
+        """
+        cls.log.log(
+            message=f"\n[Started] - Performing authentication using a hugging face token for {cls.llama2_model_name}",
+            enable_logging=cls.enable_logging,
+        )
+        login(cls.login_token)
+        cls.log.log(
+            message=f"[Completed] - Performing authentication using a hugging face token for {cls.llama2_model_name}",
+            enable_logging=cls.enable_logging,
+        )
+
+    @classmethod
+    def get_bert(cls) -> tuple:
+        """
+        This method returns the tokenizer and model for BERT.
+        """
+        tokenizer = BertTokenizer.from_pretrained(cls.bert_model_name)
+        model = BertModel.from_pretrained(cls.bert_model_name).to(cls.device)
+        return tokenizer, model
+
+    @classmethod
+    def get_llama2(cls) -> tuple:
+        """
+        This method returns the tokenizer and model for Llama2.
+        """
+        # Autheticate the model as it is a private gated repo
+        cls.model_repo_login()
+
+        tokenizer = AutoTokenizer.from_pretrained(cls.llama2_model_name)
+        tokenizer.pad_token = "[PAD]"
+        tokenizer.padding_side = "right"
+        config_kwargs = {
+            "trust_remote_code": True,
+            "cache_dir": None,
+            "revision": "main",
+            "output_hidden_states": True,
+        }
+        model_config = AutoConfig.from_pretrained(
+            cls.llama2_model_name, **config_kwargs
+        )
+        model = AutoModelForCausalLM.from_pretrained(
+            cls.llama2_model_name,
+            config=model_config,
+            device_map=cls.device,
+            torch_dtype=torch.float16,
+        )
+
+        return tokenizer, model
+
+    @classmethod
+    def get_roberta(cls) -> tuple:
+        """
+        This method returns the tokenizer and model for Roberta.
+        """
+        tokenizer = RobertaTokenizer.from_pretrained(cls.roberta_model_name)
+        model = RobertaModel.from_pretrained(cls.roberta_model_name).to(cls.device)
+        return tokenizer, model

@@ -6,13 +6,12 @@
 from config import Config
 from logger import Logger
 from helpers import Helpers
+from models.model import LLM
 
 # General Imports
 import os
 import torch
-from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 from tqdm import trange
-from huggingface_hub import login
 
 
 class Llama2:
@@ -27,67 +26,24 @@ class Llama2:
         """
         cls.config = Config()
         cls.helpers = Helpers()
+        cls.llm = LLM(enable_logging=enable_logging)
         cls.model_name = "meta-llama/Llama-2-7b-chat-hf"
-        cls.login_token = cls.config.get_hugging_face_token()
         cls.max_length = 128
         cls.log = Logger()
         cls.device = cls.config.get_device()
         cls.enable_logging = enable_logging
 
-        # Autheticate the model as it is a private gated repo
-        cls.model_repo_login(enable_logging)
         cls.log.log(
-            message=f"\n[Started] - Loading the tokenizer for the {cls.model_name} LLM model from hugging face.",
+            message=f"\n[Started] - Loading the tokenizer, model for the {cls.model_name} LLM model from hugging face.",
             enable_logging=enable_logging,
         )
-        cls.tokenizer = AutoTokenizer.from_pretrained(cls.model_name)
+        cls.tokenizer, cls.model = cls.llm.get_llama2()
         cls.log.log(
-            message=f"[Completed] - Loading the tokenizer for the {cls.model_name} LLM model from hugging face.",
+            message=f"[Completed] - Loading the tokenizer, model for the {cls.model_name} LLM model from hugging face.",
             enable_logging=enable_logging,
         )
-        cls.tokenizer.pad_token = "[PAD]"
-        cls.tokenizer.padding_side = "right"
-        cls.config_kwargs = {
-            "trust_remote_code": True,
-            "cache_dir": None,
-            "revision": "main",
-            "output_hidden_states": True,
-        }
-        cls.model_config = AutoConfig.from_pretrained(
-            cls.model_name, **cls.config_kwargs
-        )
-        cls.log.log(
-            message=f"\n[Started] - Loading the {cls.model_name} LLM model from hugging face.",
-            enable_logging=enable_logging,
-        )
-        cls.model = AutoModelForCausalLM.from_pretrained(
-            cls.model_name,
-            config=cls.model_config,
-            device_map=cls.device,
-            torch_dtype=torch.float16,
-        )
-        cls.log.log(
-            message=f"[Completed] - Loading the {cls.model_name} LLM model from hugging face.",
-            enable_logging=enable_logging,
-        )
-        cls.model.eval()
 
-    @classmethod
-    def model_repo_login(cls, enable_logging: bool):
-        """
-        The meta-llama/Llama-2-7b-hf is a private gate repo, hence we need to get access to it and authenticate using a token.
-        please refer this url to get the access - https://huggingface.co/meta-llama/Llama-2-7b-hf.
-        After getting the access please generate a token and authenticate the model.
-        """
-        cls.log.log(
-            message=f"\n[Started] - Performing authentication using a hugging face token for {cls.model_name}",
-            enable_logging=enable_logging,
-        )
-        login(cls.login_token)
-        cls.log.log(
-            message=f"[Completed] - Performing authentication using a hugging face token for {cls.model_name}",
-            enable_logging=enable_logging,
-        )
+        cls.model.eval()
 
     @classmethod
     def extract_llama2_embeddings(
