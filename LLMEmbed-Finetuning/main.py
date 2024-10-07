@@ -5,6 +5,7 @@
 # Local Imports
 from preprocess import Preprocess
 from embeddings import Embeddings
+from finetuning.finetune import FineTune
 from models.execute import Execute
 from dataset import Data
 
@@ -78,3 +79,4 @@ if __name__ == "__main__":
         extract=True,  # True, if we want to extract the embeddings and save it in local, False, if we want to load the embeddings saved in the local
         use_finetuned_model=True,  # True, if we want to use the fine tuned models to extract embeddings, else False.
     )
+    # FineTune(enable_logging = True).finetune()

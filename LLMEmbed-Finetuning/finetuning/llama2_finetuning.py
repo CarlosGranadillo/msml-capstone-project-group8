@@ -1,3 +1,8 @@
+"""
+    This module contains the class to finetune the Llama2 LLM on sentiment analysis and yes no question tasks.
+"""
+
+# General Imports
 import os
 import torch
 from datasets import load_dataset, load_from_disk
@@ -13,236 +18,195 @@ from transformers import (
 from peft import LoraConfig, PeftModel
 from trl import SFTTrainer
 
-import shutil
-
-# Replace 'model_name' with the name of the model you want to remove
-model_name = "*"
-model_cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "huggingface", "transformers", model_name)
-print(model_cache_dir)
-shutil.rmtree(model_cache_dir, ignore_errors=True)
-
-import torch
-torch.cuda.empty_cache()
-
-# import os
-# os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+# Local Imports
+from config import Config
+from helpers import Helpers
+from logger import Logger
+from models.model import LLM
 
 
-    
+class Llama2FineTune:
+    """
+    This class contains the methods to perform Llama2 finetuning.
+    """
 
+    @classmethod
+    def __init__(cls, enable_logging: bool):
+        """
+        This method initializes the variables and other instances.
+        """
+        cls.config = Config()
+        cls.helpers = Helpers()
+        cls.log = Logger()
+        cls.llm = LLM(enable_logging=enable_logging)
 
-data_path = '/home/exouser/Desktop/msml-group8-code-base/data/sentiment_analysis_fine_tuning'
-dataset_custom = load_from_disk(data_path)
+        cls.enable_logging = enable_logging
+        cls.data_path_sentiment_analysis = "/home/exouser/Desktop/msml-group8-code-base/data/sentiment_analysis_fine_tuning"
 
-# Define the function to create the llama2 prompt structure
-def create_llama2_prompt(example):
-    return {
-        'text': f"""
+    @classmethod
+    def create_llama2_prompt_sentiment_analysis(cls, row):
+        """
+        This method creates the prompt structure to fine tune Llama2 model for sentiment analysis.
+        """
+        row[
+            "text"
+        ] = f"""
         <s>
         [INST]
         <SYS>
         System Prompt :
-        You are a classification model which takes input as text and maps it to an string label that has a integer mapping to identify sentiment.
-        Integer Mapping is as follows.
-        negative: 0,
-        neutral: 1,
-        positive: 2,
-        bearish: 3,
-        bullish: 4,
-        unknown: 5,
+        Which sentiment best describes the previous financial statement from the following options: negative, neutral, positive, bearish, bullish?
         </SYS>
         User Prompt :
-        {example['text']}
+        {row['text']}
         [/INST]
         Answer:
-        {example['label']}
+        {row['label']}
         </s>
         """
-    }
+        return row
 
-# Apply the transformation directly to the dataset
-prompt_dataset = dataset_custom.map(create_llama2_prompt)
+    @classmethod
+    def set_parameters(cls):
+        """
+        This method sets the  parameters used for finetuning.
+        """
+        # LoRA parameters
+        cls.lora_r = 64  # LoRA attention dimension
+        cls.lora_alpha = 16  # Alpha parameter for LoRA scaling
+        cls.lora_dropout = 0.1  # Dropout probability for LoRA layers
 
-# The model that you want to train from the Hugging Face hub
-model_name = "NousResearch/Llama-2-7b-chat-hf"
+        # bitsandbytes parameters
+        cls.use_4bit = True  # Activate 4-bit precision base model loading
+        cls.bnb_4bit_compute_dtype = "float16"  # Compute dtype for 4-bit base models
+        cls.bnb_4bit_quant_type = "nf4"  # Quantization type (fp4 or nf4)
+        cls.use_nested_quant = False  # Activate nested quantization for 4-bit base models (double quantization)
 
-# Fine-tuned model name
-new_model = "Llama-2-7b-chat-finetune"
+        # TrainingArguments parameters
+        cls.output_dir = "./results"  # Output directory where the model predictions and checkpoints will be stored
+        cls.num_train_epochs = 1  # Number of training epochs
 
-################################################################################
-# QLoRA parameters
-################################################################################
+        # Enable fp16/bf16 training (set bf16 to True with an A100)
+        cls.fp16 = False
+        cls.bf16 = True
+        cls.per_device_train_batch_size = 4  # Batch size per GPU for training
+        cls.per_device_eval_batch_size = 4  # Batch size per GPU for evaluation
+        cls.gradient_accumulation_steps = (
+            1  # Number of update steps to accumulate the gradients for
+        )
+        cls.gradient_checkpointing = True  # Enable gradient checkpointing
+        cls.max_grad_norm = 0.3  # Maximum gradient normal (gradient clipping)
+        cls.learning_rate = 2e-4  # Initial learning rate (AdamW optimizer)
+        cls.weight_decay = (
+            0.001  # Weight decay to apply to all layers except bias/LayerNorm weights
+        )
+        cls.optim = "paged_adamw_32bit"  # Optimizer to use
+        cls.lr_scheduler_type = "cosine"  # Learning rate schedule
+        cls.max_steps = -1  # Number of training steps (overrides num_train_epochs)
+        cls.warmup_ratio = (
+            0.03  # Ratio of steps for a linear warmup (from 0 to learning rate)
+        )
+        cls.group_by_length = True  # Group sequences into batches with same length, Saves memory and speeds up training considerably
+        cls.save_steps = 0  # Save checkpoint every X updates steps
+        cls.logging_steps = 25  # Log every X updates steps
 
-# LoRA attention dimension
-lora_r = 64
+        # SFT parameters
+        cls.max_seq_length = None  # Maximum sequence length to use
+        cls.packing = False  # Pack multiple short examples in the same input sequence to increase efficiency
+        cls.device_map = {"": 0}  # Load the entire model on the GPU 0
 
-# Alpha parameter for LoRA scaling
-lora_alpha = 16
+        cls.compute_dtype = getattr(torch, cls.bnb_4bit_compute_dtype)
+        cls.bnb_config = BitsAndBytesConfig(
+            load_in_4bit=cls.use_4bit,
+            bnb_4bit_quant_type=cls.bnb_4bit_quant_type,
+            bnb_4bit_compute_dtype=cls.compute_dtype,
+            bnb_4bit_use_double_quant=cls.use_nested_quant,
+        )
 
-# Dropout probability for LoRA layers
-lora_dropout = 0.1
+        # LORA and PEFT Config
+        peft_config = LoraConfig(
+            lora_alpha=cls.lora_alpha,
+            lora_dropout=cls.lora_dropout,
+            r=cls.lora_r,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
 
-################################################################################
-# bitsandbytes parameters
-################################################################################
+        # Set training parameters
+        cls.training_arguments = TrainingArguments(
+            output_dir=cls.output_dir,
+            num_train_epochs=cls.num_train_epochs,
+            per_device_train_batch_size=cls.per_device_train_batch_size,
+            gradient_accumulation_steps=cls.gradient_accumulation_steps,
+            optim=cls.optim,
+            save_steps=cls.save_steps,
+            logging_steps=cls.logging_steps,
+            learning_rate=cls.learning_rate,
+            weight_decay=cls.weight_decay,
+            fp16=cls.fp16,
+            bf16=cls.bf16,
+            max_grad_norm=cls.max_grad_norm,
+            max_steps=cls.max_steps,
+            warmup_ratio=cls.warmup_ratio,
+            group_by_length=cls.group_by_length,
+            lr_scheduler_type=cls.lr_scheduler_type,
+            report_to="tensorboard",
+        )
 
-# Activate 4-bit precision base model loading
-use_4bit = True
+    @classmethod
+    def finetune_llama2_sentiment_analysis(cls):
+        """
+        This method performs the fine tuning for the Llama2 model.
+        """
+        sentiment_analysis_dataset = load_from_disk(cls.data_path_sentiment_analysis)
+        # Convert integer labels to string labels for the prompt
+        sentiment_mapping = {
+            label_num: label_text
+            for label_text, label_num in cls.config.get_sentiment_mapping().items()
+        }
+        sentiment_analysis_dataset = sentiment_analysis_dataset.map(
+            cls.helpers.replace_int_with_string,
+            fn_kwargs={"mapping": sentiment_mapping, "column_to_modify": "label"},
+        )
+        cls.log.log(
+            message="\n[Started] - Conversion to Llama2 model template.",
+            enable_logging=cls.enable_logging,
+        )
+        sent_analysis_prompt_dataset = sentiment_analysis_dataset.map(
+            cls.create_llama2_prompt_sentiment_analysis
+        )
+        cls.log.log(
+            message="[Completed] - Conversion to Llama2 model template.",
+            enable_logging=cls.enable_logging,
+        )
+        cls.set_lora_parameters()
 
-# Compute dtype for 4-bit base models
-bnb_4bit_compute_dtype = "float16"
+        # Check GPU compatibility with bfloat16
+        if cls.compute_dtype == torch.float16 and cls.use_4bit:
+            major, _ = torch.cuda.get_device_capability()
+            if major >= 8:
+                print("=" * 80)
+                print("Your GPU supports bfloat16: accelerate training with bf16=True")
+                print("=" * 80)
 
-# Quantization type (fp4 or nf4)
-bnb_4bit_quant_type = "nf4"
+        model, tokenizer = cls.llm.get_llama2(use_finetuned_model=False, task=None)
+        model.config.use_cache = False
+        model.config.pretraining_tp = 1
+        tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.padding_side = "right"
 
-# Activate nested quantization for 4-bit base models (double quantization)
-use_nested_quant = False
+        trainer = SFTTrainer(
+            model=model,
+            train_dataset=sent_analysis_prompt_dataset,
+            peft_config=cls.peft_config,
+            dataset_text_field="text",
+            max_seq_length=cls.max_seq_length,
+            tokenizer=tokenizer,
+            args=cls.training_arguments,
+            packing=cls.packing,
+        )
+        trainer.train()
 
-################################################################################
-# TrainingArguments parameters
-################################################################################
+        new_model = "Llama-2-7b-chat-finetune-finance-sentiment"
+        cls.helpers.save_finetuned_model(model_name=new_model)
 
-# Output directory where the model predictions and checkpoints will be stored
-output_dir = "./results"
-
-# Number of training epochs
-num_train_epochs = 1
-
-# Enable fp16/bf16 training (set bf16 to True with an A100)
-fp16 = False
-bf16 = True
-
-# Batch size per GPU for training
-per_device_train_batch_size = 4
-
-# Batch size per GPU for evaluation
-per_device_eval_batch_size = 4
-
-# Number of update steps to accumulate the gradients for
-gradient_accumulation_steps = 1
-
-# Enable gradient checkpointing
-gradient_checkpointing = True
-
-# Maximum gradient normal (gradient clipping)
-max_grad_norm = 0.3
-
-# Initial learning rate (AdamW optimizer)
-learning_rate = 2e-4
-
-# Weight decay to apply to all layers except bias/LayerNorm weights
-weight_decay = 0.001
-
-# Optimizer to use
-optim = "paged_adamw_32bit"
-
-# Learning rate schedule
-lr_scheduler_type = "cosine"
-
-# Number of training steps (overrides num_train_epochs)
-max_steps = -1
-
-# Ratio of steps for a linear warmup (from 0 to learning rate)
-warmup_ratio = 0.03
-
-# Group sequences into batches with same length
-# Saves memory and speeds up training considerably
-group_by_length = True
-
-# Save checkpoint every X updates steps
-save_steps = 0
-
-# Log every X updates steps
-logging_steps = 25
-
-################################################################################
-# SFT parameters
-################################################################################
-
-# Maximum sequence length to use
-max_seq_length = None
-
-# Pack multiple short examples in the same input sequence to increase efficiency
-packing = False
-
-# Load the entire model on the GPU 0
-device_map = {"": 0}
-
-import torch
-# Load tokenizer and model with QLoRA configuration
-compute_dtype = getattr(torch, bnb_4bit_compute_dtype)
-
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=use_4bit,
-    bnb_4bit_quant_type=bnb_4bit_quant_type,
-    bnb_4bit_compute_dtype=compute_dtype,
-    bnb_4bit_use_double_quant=use_nested_quant,
-)
-
-# Check GPU compatibility with bfloat16
-if compute_dtype == torch.float16 and use_4bit:
-    major, _ = torch.cuda.get_device_capability()
-    if major >= 8:
-        print("=" * 80)
-        print("Your GPU supports bfloat16: accelerate training with bf16=True")
-        print("=" * 80)
-
-# Load base model
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    quantization_config=bnb_config,
-    device_map=device_map
-)
-model.config.use_cache = False
-model.config.pretraining_tp = 1
-
-# Load LLaMA tokenizer
-tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-tokenizer.pad_token = tokenizer.eos_token
-tokenizer.padding_side = "right" # Fix weird overflow issue with fp16 training
-
-# Load LoRA configuration
-peft_config = LoraConfig(
-    lora_alpha=lora_alpha,
-    lora_dropout=lora_dropout,
-    r=lora_r,
-    bias="none",
-    task_type="CAUSAL_LM",
-)
-# Set training parameters
-training_arguments = TrainingArguments(
-    output_dir=output_dir,
-    num_train_epochs=num_train_epochs,
-    per_device_train_batch_size=per_device_train_batch_size,
-    gradient_accumulation_steps=gradient_accumulation_steps,
-    optim=optim,
-    save_steps=save_steps,
-    logging_steps=logging_steps,
-    learning_rate=learning_rate,
-    weight_decay=weight_decay,
-    fp16=fp16,
-    bf16=bf16,
-    max_grad_norm=max_grad_norm,
-    max_steps=max_steps,
-    warmup_ratio=warmup_ratio,
-    group_by_length=group_by_length,
-    lr_scheduler_type=lr_scheduler_type,
-    report_to="tensorboard"
-)
-
-# Set supervised fine-tuning parameters
-trainer = SFTTrainer(
-    model=model,
-    train_dataset=prompt_dataset,
-    peft_config=peft_config,
-    dataset_text_field="text",
-    max_seq_length=max_seq_length,
-    tokenizer=tokenizer,
-    args=training_arguments,
-    packing=packing,
-)
-try:
-# Train model
-    trainer.train()
-except Exception as e:
-    print(e)
