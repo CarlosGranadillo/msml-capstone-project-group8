@@ -74,7 +74,7 @@ class Config:
         """
         This function returns the device available.
         """
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = f"cuda" if torch.cuda.is_available() else "cpu"
         return device
 
     @classmethod

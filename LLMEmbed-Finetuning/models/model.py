@@ -96,6 +96,17 @@ class LLM:
         cls.bert_model_name = "google-bert/bert-large-uncased"
         cls.llama2_model_name = "meta-llama/Llama-2-7b-chat-hf"
         cls.roberta_model_name = "FacebookAI/roberta-large"
+        # Fine tuned models
+        cls.finetuned_llama2_sentiment_model_name = (
+            "cdgranadillo/Llama-2-7b-chat-finetune-finance-sentiment"
+        )
+        cls.finetuned_llama2_yes_no_model_name = (
+            "cdgranadillo/Llama-2-7b-chat-finetune-finance-yes_no_question"
+        )
+        cls.finetuned_bert_sentiment_model_name = "None"
+        cls.finetuned_bert_yes_no_model_name = "None"
+        cls.finetuned_roberta_sentiment_model_name = "None"
+        cls.finetuned_roberta_yes_no_model_name = "None"
 
     @classmethod
     def model_repo_login(cls):
@@ -115,23 +126,69 @@ class LLM:
         )
 
     @classmethod
-    def get_bert(cls) -> tuple:
+    def get_model_name(cls, llm: str, use_finetuned_model: bool, task: str) -> str:
+        """
+        This method returns the model name to be used.
+        """
+
+        if llm == "bert":
+            if use_finetuned_model and task == "sentiment_analysis":
+                return cls.finetuned_bert_sentiment_model_name
+            elif use_finetuned_model and task == "yes_no_question":
+                return cls.finetuned_bert_yes_no_model_name
+            else:
+                return cls.bert_model_name
+        elif llm == "llama2":
+            if use_finetuned_model and task == "sentiment_analysis":
+                return cls.finetuned_llama2_sentiment_model_name
+            elif use_finetuned_model and task == "yes_no_question":
+                return cls.finetuned_llama2_yes_no_model_name
+            else:
+                return cls.llama2_model_name
+        elif llm == "roberta":
+            if use_finetuned_model and task == "sentiment_analysis":
+                return cls.finetuned_roberta_sentiment_model_name
+            elif use_finetuned_model and task == "yes_no_question":
+                return cls.finetuned_roberta_yes_no_model_name
+            else:
+                return cls.roberta_model_name
+
+    @classmethod
+    def get_bert(cls, use_finetuned_model: bool, task: str) -> tuple:
         """
         This method returns the tokenizer and model for BERT.
         """
-        tokenizer = BertTokenizer.from_pretrained(cls.bert_model_name)
-        model = BertModel.from_pretrained(cls.bert_model_name).to(cls.device)
+        model_name = cls.get_model_name(
+            llm="bert", use_finetuned_model=use_finetuned_model, task=task
+        )
+        cls.log.log(
+            message=f"\n[Started] - Loading the tokenizer, model for the {model_name} LLM model from hugging face.",
+            enable_logging=cls.enable_logging,
+        )
+        tokenizer = BertTokenizer.from_pretrained(model_name)
+        model = BertModel.from_pretrained(model_name).to(cls.device)
+        cls.log.log(
+            message=f"[Completed] - Loading the tokenizer, model for the {model_name} LLM model from hugging face.",
+            enable_logging=cls.enable_logging,
+        )
         return tokenizer, model
 
     @classmethod
-    def get_llama2(cls) -> tuple:
+    def get_llama2(cls, use_finetuned_model: bool, task: str) -> tuple:
         """
         This method returns the tokenizer and model for Llama2.
         """
-        # Autheticate the model as it is a private gated repo
-        cls.model_repo_login()
-
-        tokenizer = AutoTokenizer.from_pretrained(cls.llama2_model_name)
+        # Autheticate the model if it is a private gated repo
+        if not use_finetuned_model:
+            cls.model_repo_login()
+        model_name = cls.get_model_name(
+            llm="llama2", use_finetuned_model=use_finetuned_model, task=task
+        )
+        cls.log.log(
+            message=f"\n[Started] - Loading the tokenizer, model for the {model_name} LLM model from hugging face.",
+            enable_logging=cls.enable_logging,
+        )
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
         tokenizer.pad_token = "[PAD]"
         tokenizer.padding_side = "right"
         config_kwargs = {
@@ -140,23 +197,35 @@ class LLM:
             "revision": "main",
             "output_hidden_states": True,
         }
-        model_config = AutoConfig.from_pretrained(
-            cls.llama2_model_name, **config_kwargs
-        )
+        model_config = AutoConfig.from_pretrained(model_name, **config_kwargs)
         model = AutoModelForCausalLM.from_pretrained(
-            cls.llama2_model_name,
+            model_name,
             config=model_config,
             device_map=cls.device,
             torch_dtype=torch.float16,
         )
-
+        cls.log.log(
+            message=f"[Completed] - Loading the tokenizer, model for the {model_name} LLM model from hugging face.",
+            enable_logging=cls.enable_logging,
+        )
         return tokenizer, model
 
     @classmethod
-    def get_roberta(cls) -> tuple:
+    def get_roberta(cls, use_finetuned_model: bool, task: str) -> tuple:
         """
         This method returns the tokenizer and model for Roberta.
         """
-        tokenizer = RobertaTokenizer.from_pretrained(cls.roberta_model_name)
-        model = RobertaModel.from_pretrained(cls.roberta_model_name).to(cls.device)
+        cls.log.log(
+            message=f"\n[Started] - Loading the tokenizer, model for the {model_name} LLM model from hugging face.",
+            enable_logging=cls.enable_logging,
+        )
+        model_name = cls.get_model_name(
+            llm="roberta", use_finetuned_model=use_finetuned_model, task=task
+        )
+        tokenizer = RobertaTokenizer.from_pretrained(model_name)
+        model = RobertaModel.from_pretrained(model_name).to(cls.device)
+        cls.log.log(
+            message=f"[Completed] - Loading the tokenizer, model for the {model_name} LLM model from hugging face.",
+            enable_logging=cls.enable_logging,
+        )
         return tokenizer, model

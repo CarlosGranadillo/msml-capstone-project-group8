@@ -13,6 +13,7 @@ import os
 import warnings
 import torch
 import pandas as pd
+import shutil
 
 warnings.filterwarnings("ignore")
 
@@ -23,6 +24,7 @@ def main(
     extract: bool,
     save_data_in_local: bool,
     read_data_from_local: bool,
+    use_finetuned_model: bool,
 ):
     """
     This method is the starting point for the project. It performs the following tasks -
@@ -35,6 +37,7 @@ def main(
     # Clear CUDA Cache
     print("Clearing CUDA Cache")
     torch.cuda.empty_cache()
+
     # 1. Preprocess the datasets
     if preprocess:
         datasets = Preprocess(debug).preprocess(
@@ -52,7 +55,9 @@ def main(
             "sentiment_analysis": datasets["sentiment_analysis"],
             "yes_no_question": datasets["yes_no_question"],
         }
-        embeddings = Embeddings(debug).extract(datasets=datasets_to_extract_embeddings)
+        embeddings = Embeddings(debug, use_finetuned_model=use_finetuned_model).extract(
+            datasets=datasets_to_extract_embeddings
+        )
     else:
         print(
             "\n----------------------------------Skipping Embeddings Extraction-----------------------------------------------"
@@ -67,8 +72,9 @@ def main(
 if __name__ == "__main__":
     main(
         debug=True,  # True, if we want to enable debugging, else False.
-        preprocess=False,  # True, if we want to preprocess the data from hugging face, else False.
+        preprocess=True,  # True, if we want to preprocess the data from hugging face, else False.
         save_data_in_local=False,  # True, if we want save the huggingface datasets in local, else False.
         read_data_from_local=True,  # True, if we want to read the data saveed in local, else False.
-        extract=False,  # True, if we want to extract the embeddings and save it in local, False, if we want to load the embeddings saved in the local
+        extract=True,  # True, if we want to extract the embeddings and save it in local, False, if we want to load the embeddings saved in the local
+        use_finetuned_model=True,  # True, if we want to use the fine tuned models to extract embeddings, else False.
     )

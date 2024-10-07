@@ -67,6 +67,7 @@ class Helpers:
             sentences_embeds.to("cpu"), save_path + file_path + f"{mode}_texts.pt"
         )
         torch.save(labels, save_path + file_path + f"{mode}_labels.pt")
+        print(f"Saved at :", save_path + file_path)
 
     @classmethod
     def save_dataset(cls, dataset, file_name: str):
@@ -86,7 +87,7 @@ class Helpers:
     @classmethod
     def read_dataset_from_local(cls, dataset_name: str):
         """
-        This dataset loads the data from a local directory.
+        This function loads the data from a local directory.
         """
         load_path = cls.config.get_base_path() + "data/" + dataset_name
         if not os.path.exists(load_path):
@@ -96,3 +97,18 @@ class Helpers:
             return
         dataset = load_from_disk(load_path)
         return dataset
+
+    @classmethod
+    def clear_huggingface_cache(cls):
+        """
+        This function clears the hugging face cache
+        """
+        print("Clearing Hugging Face Cache")
+        cache_dir = os.path.expanduser("~/.cache/huggingface/")
+
+        # Check if the directory exists and remove it
+        if os.path.exists(cache_dir):
+            shutil.rmtree(cache_dir)  # Recursively delete the directory
+            print(f"Cache directory: '{cache_dir}' cleared successfully.")
+        else:
+            print(f"Cache directory: '{cache_dir}' does not exist.")

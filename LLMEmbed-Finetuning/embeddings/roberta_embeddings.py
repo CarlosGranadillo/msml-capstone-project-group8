@@ -20,7 +20,7 @@ class Roberta:
     """
 
     @classmethod
-    def __init__(cls, enable_logging: bool):
+    def __init__(cls, enable_logging: bool, use_finetuned_model: bool):
         """
         This method initialized the variables that are used in this class
         """
@@ -31,32 +31,33 @@ class Roberta:
         cls.model_name = "FacebookAI/roberta-large"
         cls.device = cls.config.get_device()
         cls.enable_logging = enable_logging
-
-        cls.log.log(
-            message=f"\n[Started] - Loading the tokenizer, model for the {cls.model_name} LLM model from hugging face.",
-            enable_logging=enable_logging,
-        )
-        cls.tokenizer, cls.model = cls.llm.get_roberta()
-        cls.log.log(
-            message=f"[Completed] - Loading the tokenizer, model for the {cls.model_name} LLM model from hugging face.",
-            enable_logging=enable_logging,
-        )
-
+        cls.use_finetuned_model = use_finetuned_model
         cls.max_length = 128
-        cls.model.eval()
 
     @classmethod
     def extract_roberta_embeddings(
-        cls, mode: str, device: str, sentences: list, labels: list, task: str
-    ) -> dict:
+        cls,
+        mode: str,
+        device: str,
+        sentences: list,
+        labels: list,
+        task: str,
+        model,
+        tokenizer,
+    ):
         """
         This method performs the embeddings extractions using roberta.
         """
+
         cls.log.log(
-            message=f"\n[Started] - Performing embeddings extraction using {cls.model_name} for {task} on {mode} data.",
+            message=f"\n[Started] - Performing embeddings extraction using Roberta for {task} on {mode} data.",
             enable_logging=cls.enable_logging,
         )
-        path = f"roberta_embeddings/{task}/dataset_tensors/"
+        if cls.use_finetuned_model:
+            path = f"base/roberta_embeddings/{task}/dataset_tensors/"
+        else:
+            path = f"finetuned/roberta_embeddings/{task}/dataset_tensors/"
+
         sentences_reps = []
         step = 16  # Reduced batch size to save memory
 
@@ -66,7 +67,7 @@ class Roberta:
                 idx_end = len(sentences)
             sentences_batch = sentences[idx:idx_end]
 
-            sentences_batch_encoding = cls.tokenizer(
+            sentences_batch_encoding = tokenizer(
                 sentences_batch,
                 return_tensors="pt",
                 max_length=cls.max_length,
@@ -76,7 +77,7 @@ class Roberta:
             sentences_batch_encoding = sentences_batch_encoding.to(device)
 
             with torch.no_grad():
-                batch_outputs = cls.model(**sentences_batch_encoding)
+                batch_outputs = model(**sentences_batch_encoding)
                 reps_batch = batch_outputs.last_hidden_state[:, 0, :]
             sentences_reps.append(reps_batch.cpu())
 
@@ -92,7 +93,7 @@ class Roberta:
         )
 
         cls.log.log(
-            message=f"[Completed] - Performing embeddings extraction using {cls.model_name} for {task} on {mode} data.",
+            message=f"[Completed] - Performing embeddings extraction using Roberta for {task} on {mode} data.",
             enable_logging=cls.enable_logging,
         )
-        return sentences_reps, labels
+        del sentences_reps, labels

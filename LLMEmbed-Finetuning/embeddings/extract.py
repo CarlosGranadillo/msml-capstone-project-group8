@@ -9,6 +9,7 @@ from logger import Logger
 from .bert_embeddings import Bert
 from .roberta_embeddings import Roberta
 from .llama2_embeddings import Llama2
+from models.model import LLM
 
 # General Imports
 from sklearn.model_selection import train_test_split
@@ -24,17 +25,18 @@ class Embeddings:
     """
 
     @classmethod
-    def __init__(cls, enable_logging):
+    def __init__(cls, enable_logging: bool, use_finetuned_model: bool):
         """
         This method initializes the dictionary to save the datasets.
         """
         cls.config = Config()
         cls.helpers = Helpers()
         cls.log = Logger()
-        cls.embeddings = defaultdict(dict)
-        cls.bert = Bert(enable_logging)
-        cls.roberta = Roberta(enable_logging)
-        cls.llama2 = Llama2(enable_logging)
+        cls.llm = LLM(enable_logging=enable_logging)
+        cls.bert = Bert(enable_logging, use_finetuned_model)
+        cls.roberta = Roberta(enable_logging, use_finetuned_model)
+        cls.llama2 = Llama2(enable_logging, use_finetuned_model)
+        cls.use_finetuned_model = use_finetuned_model
         cls.enable_logging = enable_logging
         cls.device = cls.config.get_device()
 
@@ -46,12 +48,11 @@ class Embeddings:
         Extraction will not be performed on the fine tuning datasets.
         """
         print("\n[Started] -  Embeddings extraction")
-        tasks = cls.config.get_selected_task_types()
 
         for dataset_name, dataset in datasets.items():
             sentences = dataset["text"]
             labels = dataset["label"]
-            # Train-test split
+            # train-test split
             (
                 sentences_train,
                 sentences_test,
@@ -60,95 +61,84 @@ class Embeddings:
             ) = train_test_split(sentences, labels, test_size=0.2, random_state=42)
 
             # Bert Training data emebeddings extraction
-            return_dict = cls.bert.extract_bert_embeddings(
+            cls.helpers.clear_huggingface_cache()
+            bert_tokenizer, bert_model = cls.llm.get_bert(
+                use_finetuned_model=cls.use_finetuned_model, task=dataset_name
+            )
+            bert_model.eval()
+            cls.bert.extract_bert_embeddings(
                 mode="train",
                 device=cls.device,
                 sentences=sentences_train,
                 labels=labels_train,
                 task=dataset_name,
-            )
-            cls.embeddings[f"bert_{dataset_name}_train_embeddings"]["sentences"] = (
-                return_dict[0]
-            )
-            cls.embeddings[f"bert_{dataset_name}_train_embeddings"]["labels"] = (
-                return_dict[1]
+                model=bert_model,
+                tokenizer=bert_tokenizer,
             )
 
             # Bert Testing data emebeddings extraction
-            return_dict = cls.bert.extract_bert_embeddings(
+            cls.bert.extract_bert_embeddings(
                 mode="test",
                 device=cls.device,
                 sentences=sentences_test,
                 labels=labels_test,
                 task=dataset_name,
-            )
-            cls.embeddings[f"bert_{dataset_name}_test_embeddings"]["sentences"] = (
-                return_dict[0]
-            )
-            cls.embeddings[f"bert_{dataset_name}_test_embeddings"]["labels"] = (
-                return_dict[1]
+                model=bert_model,
+                tokenizer=bert_tokenizer,
             )
 
             # Roberta Training emebeddings extraction
-            return_dict = cls.roberta.extract_roberta_embeddings(
+            cls.helpers.clear_huggingface_cache()
+            roberta_tokenizer, roberta_model = cls.llm.get_roberta(
+                use_finetuned_model=cls.use_finetuned_model, task=dataset_name
+            )
+            roberta_model.eval()
+            cls.roberta.extract_roberta_embeddings(
                 mode="train",
                 device=cls.device,
                 sentences=sentences_train,
                 labels=labels_train,
                 task=dataset_name,
-            )
-            cls.embeddings[f"roberta_{dataset_name}_train_embeddings"]["sentences"] = (
-                return_dict[0]
-            )
-            cls.embeddings[f"roberta_{dataset_name}_train_embeddings"]["labels"] = (
-                return_dict[1]
+                model=roberta_model,
+                tokenizer=roberta_tokenizer,
             )
 
             # Roberta Testing emebeddings extraction
-            return_dict = cls.roberta.extract_roberta_embeddings(
+            cls.roberta.extract_roberta_embeddings(
                 mode="test",
                 device=cls.device,
                 sentences=sentences_test,
                 labels=labels_test,
                 task=dataset_name,
-            )
-            cls.embeddings[f"roberta_{dataset_name}_test_embeddings"]["sentences"] = (
-                return_dict[0]
-            )
-            cls.embeddings[f"roberta_{dataset_name}_test_embeddings"]["labels"] = (
-                return_dict[1]
+                model=roberta_model,
+                tokenizer=roberta_tokenizer,
             )
 
-            # Llama Training emebeddings extraction
-            return_dict = cls.llama2.extract_llama2_embeddings(
+            # Llama2 Training emebeddings extraction
+            cls.helpers.clear_huggingface_cache()
+            llama2_tokenizer, llama2_model = cls.llm.get_llama2(
+                use_finetuned_model=cls.use_finetuned_model, task=dataset_name
+            )
+            llama2_model.eval()
+            cls.llama2.extract_llama2_embeddings(
                 mode="train",
                 device=cls.device,
                 sentences=sentences_train,
                 labels=labels_train,
                 task=dataset_name,
-            )
-            cls.embeddings[f"llama2_{dataset_name}_train_embeddings"]["sentences"] = (
-                return_dict[0]
-            )
-            cls.embeddings[f"llama2_{dataset_name}_train_embeddings"]["labels"] = (
-                return_dict[1]
+                model=llama2_model,
+                tokenizer=llama2_tokenizer,
             )
 
-            # Llama Testing emebeddings extraction
-            return_dict = cls.llama2.extract_llama2_embeddings(
+            # Llama2 Testing emebeddings extraction
+            cls.llama2.extract_llama2_embeddings(
                 mode="test",
                 device=cls.device,
                 sentences=sentences_test,
                 labels=labels_test,
                 task=dataset_name,
-            )
-            cls.embeddings[f"llama_{dataset_name}_test_embeddings"]["sentences"] = (
-                return_dict[0]
-            )
-            cls.embeddings[f"llama_{dataset_name}_test_embeddings"]["labels"] = (
-                return_dict[1]
+                model=llama2_model,
+                tokenizer=llama2_tokenizer,
             )
 
         print("[Completed] -  Embeddings extraction.")
-
-        return cls.embeddings
