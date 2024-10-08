@@ -73,13 +73,13 @@ def main(
             "\n----------------------------------Skipping Embeddings Extraction-----------------------------------------------"
         )
 
-    # # 3. Run the downstream model on the extracted embeddings
-    # metrics = Execute(debug).execute(use_finetuned_embdes)
-    # df = pd.DataFrame.from_dict(metrics, orient="index")
-    # print(df)
+    # 3. Run the downstream model on the extracted embeddings
+    metrics = Execute(debug).execute(use_finetuned_embdes)
+    df = pd.DataFrame.from_dict(metrics, orient="index")
+    print(df)
 
-    # # 4. Fine tune the LLM models
-    # FineTune(enable_logging = True).finetune()
+    # 4. Fine tune the LLM models
+    FineTune(enable_logging = True).finetune()
 
 
 if __name__ == "__main__":
