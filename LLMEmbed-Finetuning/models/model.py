@@ -96,17 +96,7 @@ class LLM:
         cls.bert_model_name = "google-bert/bert-large-uncased"
         cls.llama2_model_name = "meta-llama/Llama-2-7b-chat-hf"
         cls.roberta_model_name = "FacebookAI/roberta-large"
-        # Fine tuned models
-        cls.finetuned_llama2_sentiment_model_name = (
-            "cdgranadillo/Llama-2-7b-chat-finetune-finance-sentiment"
-        )
-        cls.finetuned_llama2_yes_no_model_name = (
-            "cdgranadillo/Llama-2-7b-chat-finetune-finance-yes_no_question"
-        )
-        cls.finetuned_bert_sentiment_model_name = "None"
-        cls.finetuned_bert_yes_no_model_name = "None"
-        cls.finetuned_roberta_sentiment_model_name = "None"
-        cls.finetuned_roberta_yes_no_model_name = "None"
+        cls.finetune_models_path = cls.config.get_base_path() + "finetuned_models/"
 
     @classmethod
     def model_repo_login(cls):
@@ -130,26 +120,22 @@ class LLM:
         """
         This method returns the model name to be used.
         """
-
         if llm == "bert":
-            if use_finetuned_model and task == "sentiment_analysis":
-                return cls.finetuned_bert_sentiment_model_name
-            elif use_finetuned_model and task == "yes_no_question":
-                return cls.finetuned_bert_yes_no_model_name
+            if use_finetuned_model:
+                local_model = cls.finetune_models_path + f"bert-large-uncased-finetune-finance-{task}"
+                return local_model
             else:
                 return cls.bert_model_name
         elif llm == "llama2":
-            if use_finetuned_model and task == "sentiment_analysis":
-                return cls.finetuned_llama2_sentiment_model_name
-            elif use_finetuned_model and task == "yes_no_question":
-                return cls.finetuned_llama2_yes_no_model_name
+            if use_finetuned_model:
+                local_model = cls.finetune_models_path + f"Llama-2-7b-chat-finetune-finance-{task}"
+                return local_model
             else:
                 return cls.llama2_model_name
         elif llm == "roberta":
-            if use_finetuned_model and task == "sentiment_analysis":
-                return cls.finetuned_roberta_sentiment_model_name
-            elif use_finetuned_model and task == "yes_no_question":
-                return cls.finetuned_roberta_yes_no_model_name
+            if use_finetuned_model:
+                local_model = cls.finetune_models_path + f"roberta-large-finetune-finance-{task}"
+                return local_model
             else:
                 return cls.roberta_model_name
 

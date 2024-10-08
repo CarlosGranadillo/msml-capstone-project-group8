@@ -97,14 +97,11 @@ class Helpers:
         """
         save_path = cls.config.get_base_path() + "finetuned_models/"
         model_path = save_path + model_name
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
-            trainer.model.save_pretrained(model_path)
-            trainer.tokenizer.save_pretrained(model_path)
-        elif os.path.exists(model_path):
-            shutil.rmtree(model_path)
-            trainer.model.save_pretrained(model_path)
-            trainer.tokenizer.save_pretrained(model_path)
+        print("Saved at :", model_path)
+        if not os.path.exists(model_path):
+            os.makedirs(model_path)
+        trainer.model.save_pretrained(model_path)
+        trainer.tokenizer.save_pretrained(model_path)
 
     @classmethod
     def read_dataset_from_local(cls, dataset_name: str):
