@@ -30,19 +30,15 @@ class Helpers:
         return example
 
     @classmethod
-    def replace_string_with_int(
-        cls, example, mapping: dict, column_to_modify: str
-    ):
+    def replace_string_with_int(cls, example, mapping: dict, column_to_modify: str):
         """
         This function converts string values to integers in a specific column.
         """
         example[column_to_modify] = mapping.get(example[column_to_modify], -1)
         return example
-    
+
     @classmethod
-    def replace_int_with_string(
-        cls, example, mapping: dict, column_to_modify: str
-    ):
+    def replace_int_with_string(cls, example, mapping: dict, column_to_modify: str):
         """
         This function converts integer values to string in a specific column.
         """
@@ -108,7 +104,6 @@ class Helpers:
             trainer.model.save_pretrained(model_path)
         else:
             trainer.model.save_pretrained(model_path)
-    
 
     @classmethod
     def read_dataset_from_local(cls, dataset_name: str):

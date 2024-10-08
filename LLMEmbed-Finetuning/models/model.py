@@ -174,7 +174,7 @@ class LLM:
         return tokenizer, model
 
     @classmethod
-    def get_llama2(cls, use_finetuned_model: bool, task: str) -> tuple:
+    def get_llama2(cls, use_finetuned_model: bool, task: str, **kwargs) -> tuple:
         """
         This method returns the tokenizer and model for Llama2.
         """
@@ -188,7 +188,7 @@ class LLM:
             message=f"\n[Started] - Loading the tokenizer, model for the {model_name} LLM model from hugging face.",
             enable_logging=cls.enable_logging,
         )
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
         tokenizer.pad_token = "[PAD]"
         tokenizer.padding_side = "right"
         config_kwargs = {
@@ -197,6 +197,7 @@ class LLM:
             "revision": "main",
             "output_hidden_states": True,
         }
+        config_kwargs.update(**kwargs)
         model_config = AutoConfig.from_pretrained(model_name, **config_kwargs)
         model = AutoModelForCausalLM.from_pretrained(
             model_name,

@@ -39,9 +39,7 @@ class Llama2FineTune:
         cls.helpers = Helpers()
         cls.log = Logger()
         cls.llm = LLM(enable_logging=enable_logging)
-
         cls.enable_logging = enable_logging
-        cls.data_path_sentiment_analysis = "/home/exouser/Desktop/msml-group8-code-base/data/sentiment_analysis_fine_tuning"
 
     @classmethod
     def create_llama2_prompt_sentiment_analysis(cls, row):
@@ -67,10 +65,35 @@ class Llama2FineTune:
         return row
 
     @classmethod
-    def set_parameters(cls):
+    def create_llama2_prompt_yes_no_question(cls, row):
+        """
+        This method creates the prompt structure to fine tune Llama2 model for yes no question.
+        """
+        row[
+            "text"
+        ] = f"""
+        <s>
+        [INST]
+        <SYS>
+        System Prompt :
+        Answer the given question with the possible answer options: yes, no
+        </SYS>
+        User Prompt :
+        {row['text']}
+        [/INST]
+        Answer:
+        {row['label']}
+        </s>
+        """
+        return row
+
+    @classmethod
+    def set_finetune_parameters(cls):
         """
         This method sets the  parameters used for finetuning.
         """
+        cls.model_name = "meta-llama/Llama-2-7b-chat-hf"
+
         # LoRA parameters
         cls.lora_r = 64  # LoRA attention dimension
         cls.lora_alpha = 16  # Alpha parameter for LoRA scaling
@@ -124,7 +147,7 @@ class Llama2FineTune:
         )
 
         # LORA and PEFT Config
-        peft_config = LoraConfig(
+        cls.peft_config = LoraConfig(
             lora_alpha=cls.lora_alpha,
             lora_dropout=cls.lora_dropout,
             r=cls.lora_r,
@@ -153,33 +176,48 @@ class Llama2FineTune:
             report_to="tensorboard",
         )
 
+        # Set Mappins
+        cls.mapping = {
+            "sentiment_analysis": cls.config.get_sentiment_mapping(),
+            "yes_no_question": cls.config.get_yes_no_mapping(),
+        }
+
+        # Prompt conversion function
+        cls.prompt_conversion = {
+            "sentiment_analysis" : cls.create_llama2_prompt_sentiment_analysis,
+            "yes_no_question" : cls.create_llama2_prompt_yes_no_question,
+        }
+
     @classmethod
-    def finetune_llama2_sentiment_analysis(cls):
+    def finetune_llama2(cls, task: str):
         """
         This method performs the fine tuning for the Llama2 model.
         """
-        sentiment_analysis_dataset = load_from_disk(cls.data_path_sentiment_analysis)
+        cls.helpers.clear_huggingface_cache()
+        torch.cuda.empty_cache()
+
+        cls.set_finetune_parameters()
+        data_path = (
+            f"/home/exouser/Desktop/msml-group8-code-base/data/{task}_fine_tuning"
+        )
+        dataset = load_from_disk(data_path)
         # Convert integer labels to string labels for the prompt
-        sentiment_mapping = {
-            label_num: label_text
-            for label_text, label_num in cls.config.get_sentiment_mapping().items()
+        mapping = {
+            label_num: label_text for label_text, label_num in cls.mapping[task].items()
         }
-        sentiment_analysis_dataset = sentiment_analysis_dataset.map(
+        dataset = dataset.map(
             cls.helpers.replace_int_with_string,
-            fn_kwargs={"mapping": sentiment_mapping, "column_to_modify": "label"},
+            fn_kwargs={"mapping": mapping, "column_to_modify": "label"},
         )
         cls.log.log(
             message="\n[Started] - Conversion to Llama2 model template.",
             enable_logging=cls.enable_logging,
         )
-        sent_analysis_prompt_dataset = sentiment_analysis_dataset.map(
-            cls.create_llama2_prompt_sentiment_analysis
-        )
+        prompt_dataset = dataset.map(cls.prompt_conversion[task])
         cls.log.log(
             message="[Completed] - Conversion to Llama2 model template.",
             enable_logging=cls.enable_logging,
         )
-        cls.set_lora_parameters()
 
         # Check GPU compatibility with bfloat16
         if cls.compute_dtype == torch.float16 and cls.use_4bit:
@@ -189,15 +227,21 @@ class Llama2FineTune:
                 print("Your GPU supports bfloat16: accelerate training with bf16=True")
                 print("=" * 80)
 
-        model, tokenizer = cls.llm.get_llama2(use_finetuned_model=False, task=None)
+        tokenizer, model = cls.llm.get_llama2(
+            use_finetuned_model=False,
+            task=None,
+            quantization_config=cls.bnb_config,
+            device_map=cls.device_map,
+        )
+        model.config.use_cache = False
+        model.config.pretraining_tp = 1
         model.config.use_cache = False
         model.config.pretraining_tp = 1
         tokenizer.pad_token = tokenizer.eos_token
-        tokenizer.padding_side = "right"
 
         trainer = SFTTrainer(
             model=model,
-            train_dataset=sent_analysis_prompt_dataset,
+            train_dataset=prompt_dataset,
             peft_config=cls.peft_config,
             dataset_text_field="text",
             max_seq_length=cls.max_seq_length,
@@ -207,6 +251,5 @@ class Llama2FineTune:
         )
         trainer.train()
 
-        new_model = "Llama-2-7b-chat-finetune-finance-sentiment"
-        cls.helpers.save_finetuned_model(model_name=new_model)
-
+        new_model = f"Llama-2-7b-chat-finetune-finance-{task}"
+        cls.helpers.save_finetuned_model(model_name=new_model, trainer=trainer)

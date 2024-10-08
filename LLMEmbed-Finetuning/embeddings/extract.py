@@ -13,7 +13,7 @@ from models.model import LLM
 
 # General Imports
 from sklearn.model_selection import train_test_split
-from collections import defaultdict
+import torch
 
 
 class Embeddings:
@@ -33,8 +33,8 @@ class Embeddings:
         cls.helpers = Helpers()
         cls.log = Logger()
         cls.llm = LLM(enable_logging=enable_logging)
-        cls.bert = Bert(enable_logging, use_finetuned_model)
-        cls.roberta = Roberta(enable_logging, use_finetuned_model)
+        # cls.bert = Bert(enable_logging, use_finetuned_model)
+        # cls.roberta = Roberta(enable_logging, use_finetuned_model)
         cls.llama2 = Llama2(enable_logging, use_finetuned_model)
         cls.use_finetuned_model = use_finetuned_model
         cls.enable_logging = enable_logging
@@ -62,6 +62,7 @@ class Embeddings:
 
             # Bert Training data emebeddings extraction
             cls.helpers.clear_huggingface_cache()
+            torch.cuda.empty_cache()
             bert_tokenizer, bert_model = cls.llm.get_bert(
                 use_finetuned_model=cls.use_finetuned_model, task=dataset_name
             )
@@ -89,6 +90,7 @@ class Embeddings:
 
             # Roberta Training emebeddings extraction
             cls.helpers.clear_huggingface_cache()
+            torch.cuda.empty_cache()
             roberta_tokenizer, roberta_model = cls.llm.get_roberta(
                 use_finetuned_model=cls.use_finetuned_model, task=dataset_name
             )
@@ -116,6 +118,7 @@ class Embeddings:
 
             # Llama2 Training emebeddings extraction
             cls.helpers.clear_huggingface_cache()
+            torch.cuda.empty_cache()
             llama2_tokenizer, llama2_model = cls.llm.get_llama2(
                 use_finetuned_model=cls.use_finetuned_model, task=dataset_name
             )
