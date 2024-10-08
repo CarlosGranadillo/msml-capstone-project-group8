@@ -10,6 +10,7 @@ from transformers import BertTokenizer, BertModel
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 from transformers import RobertaTokenizer, RobertaModel
 from huggingface_hub import login
+from peft import PeftModel
 
 # Local Imports
 from config import Config
@@ -122,19 +123,27 @@ class LLM:
         """
         if llm == "bert":
             if use_finetuned_model:
-                local_model = cls.finetune_models_path + f"bert-large-uncased-finetune-finance-{task}"
+                local_model = (
+                    cls.finetune_models_path
+                    + f"bert-large-uncased-finetune-finance-{task}"
+                )
                 return local_model
             else:
                 return cls.bert_model_name
         elif llm == "llama2":
             if use_finetuned_model:
-                local_model = cls.finetune_models_path + f"Llama-2-7b-chat-finetune-finance-{task}"
+                local_model = (
+                    cls.finetune_models_path
+                    + f"Llama-2-7b-chat-finetune-finance-{task}"
+                )
                 return local_model
             else:
                 return cls.llama2_model_name
         elif llm == "roberta":
             if use_finetuned_model:
-                local_model = cls.finetune_models_path + f"roberta-large-finetune-finance-{task}"
+                local_model = (
+                    cls.finetune_models_path + f"roberta-large-finetune-finance-{task}"
+                )
                 return local_model
             else:
                 return cls.roberta_model_name
@@ -148,13 +157,13 @@ class LLM:
             llm="bert", use_finetuned_model=use_finetuned_model, task=task
         )
         cls.log.log(
-            message=f"\n[Started] - Loading the tokenizer, model for the {model_name} LLM model from hugging face.",
+            message=f"\n[Started] - Loading the tokenizer, model for the {model_name} LLM model.",
             enable_logging=cls.enable_logging,
         )
         tokenizer = BertTokenizer.from_pretrained(model_name)
         model = BertModel.from_pretrained(model_name).to(cls.device)
         cls.log.log(
-            message=f"[Completed] - Loading the tokenizer, model for the {model_name} LLM model from hugging face.",
+            message=f"[Completed] - Loading the tokenizer, model for the {model_name} LLM model.",
             enable_logging=cls.enable_logging,
         )
         return tokenizer, model
@@ -165,18 +174,10 @@ class LLM:
         This method returns the tokenizer and model for Llama2.
         """
         # Autheticate the model if it is a private gated repo
-        if not use_finetuned_model:
-            cls.model_repo_login()
+        cls.model_repo_login()
         model_name = cls.get_model_name(
             llm="llama2", use_finetuned_model=use_finetuned_model, task=task
         )
-        cls.log.log(
-            message=f"\n[Started] - Loading the tokenizer, model for the {model_name} LLM model from hugging face.",
-            enable_logging=cls.enable_logging,
-        )
-        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-        tokenizer.pad_token = "[PAD]"
-        tokenizer.padding_side = "right"
         config_kwargs = {
             "trust_remote_code": True,
             "cache_dir": None,
@@ -184,17 +185,55 @@ class LLM:
             "output_hidden_states": True,
         }
         config_kwargs.update(**kwargs)
-        model_config = AutoConfig.from_pretrained(model_name, **config_kwargs)
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            config=model_config,
-            device_map=cls.device,
-            torch_dtype=torch.float16,
+        model_config = AutoConfig.from_pretrained(
+            cls.llama2_model_name, **config_kwargs
         )
-        cls.log.log(
-            message=f"[Completed] - Loading the tokenizer, model for the {model_name} LLM model from hugging face.",
-            enable_logging=cls.enable_logging,
-        )
+
+        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+        tokenizer.padding_side = "right"
+
+        if use_finetuned_model:
+            cls.log.log(
+                message=f"\n[Started] - Loading the tokenizer, PEFT model for the {model_name} LLM model.",
+                enable_logging=cls.enable_logging,
+            )
+            tokenizer.pad_token = tokenizer.eos_token
+            # Load the base model to merge with the peft finetuned model
+            base_model = AutoModelForCausalLM.from_pretrained(
+                cls.llama2_model_name,
+                config=model_config,
+                low_cpu_mem_usage=True,
+                device_map=cls.device,
+                torch_dtype=torch.float16,
+            )
+            cls.log.log(
+                message=f"Merging {model_name} PEFT model with {cls.llama2_model_name}.",
+                enable_logging=cls.enable_logging,
+            )
+            model = PeftModel.from_pretrained(base_model, model_name)
+            model = model.merge_and_unload()
+            cls.log.log(
+                message=f"[Completed] - Loading the tokenizer, PEFT model for the {model_name} LLM model.",
+                enable_logging=cls.enable_logging,
+            )
+
+        else:
+            # Regular model
+            cls.log.log(
+                message=f"\n[Started] - Loading the tokenizer, model for the {model_name} LLM model.",
+                enable_logging=cls.enable_logging,
+            )
+            tokenizer.pad_token = "[PAD]"
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                config=model_config,
+                device_map=cls.device,
+                torch_dtype=torch.float16,
+            )
+            cls.log.log(
+                message=f"[Completed] - Loading the tokenizer, model for the {model_name} LLM model.",
+                enable_logging=cls.enable_logging,
+            )
         return tokenizer, model
 
     @classmethod
@@ -203,7 +242,7 @@ class LLM:
         This method returns the tokenizer and model for Roberta.
         """
         cls.log.log(
-            message=f"\n[Started] - Loading the tokenizer, model for the {model_name} LLM model from hugging face.",
+            message=f"\n[Started] - Loading the tokenizer, model for the {model_name} LLM model.",
             enable_logging=cls.enable_logging,
         )
         model_name = cls.get_model_name(
@@ -212,7 +251,7 @@ class LLM:
         tokenizer = RobertaTokenizer.from_pretrained(model_name)
         model = RobertaModel.from_pretrained(model_name).to(cls.device)
         cls.log.log(
-            message=f"[Completed] - Loading the tokenizer, model for the {model_name} LLM model from hugging face.",
+            message=f"[Completed] - Loading the tokenizer, model for the {model_name} LLM model.",
             enable_logging=cls.enable_logging,
         )
         return tokenizer, model

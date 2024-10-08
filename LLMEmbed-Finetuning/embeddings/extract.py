@@ -33,8 +33,8 @@ class Embeddings:
         cls.helpers = Helpers()
         cls.log = Logger()
         cls.llm = LLM(enable_logging=enable_logging)
-        # cls.bert = Bert(enable_logging, use_finetuned_model)
-        # cls.roberta = Roberta(enable_logging, use_finetuned_model)
+        cls.bert = Bert(enable_logging, use_finetuned_model)
+        cls.roberta = Roberta(enable_logging, use_finetuned_model)
         cls.llama2 = Llama2(enable_logging, use_finetuned_model)
         cls.use_finetuned_model = use_finetuned_model
         cls.enable_logging = enable_logging
