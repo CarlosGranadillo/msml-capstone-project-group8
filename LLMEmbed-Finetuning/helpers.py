@@ -84,11 +84,11 @@ class Helpers:
         file_path = save_path + file_name
         if not os.path.exists(save_path):
             os.makedirs(save_path)
+            dataset.save_to_disk(file_path)
         elif os.path.exists(file_path):
             shutil.rmtree(file_path)
             dataset.save_to_disk(file_path)
-        else:
-            dataset.save_to_disk(file_path)
+            
 
     @classmethod
     def save_finetuned_model(cls, trainer, model_name: str):
@@ -99,11 +99,12 @@ class Helpers:
         model_path = save_path + model_name
         if not os.path.exists(save_path):
             os.makedirs(save_path)
+            trainer.model.save_pretrained(model_path)
+            trainer.tokenizer.save_pretrained(model_path)
         elif os.path.exists(model_path):
             shutil.rmtree(model_path)
             trainer.model.save_pretrained(model_path)
-        else:
-            trainer.model.save_pretrained(model_path)
+            trainer.tokenizer.save_pretrained(model_path)
 
     @classmethod
     def read_dataset_from_local(cls, dataset_name: str):
