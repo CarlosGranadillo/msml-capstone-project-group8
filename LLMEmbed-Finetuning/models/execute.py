@@ -26,16 +26,16 @@ class Execute:
     """
 
     @classmethod
-    def __init__(cls, enable_logging):
+    def __init__(cls, enable_logging, epochs, SIGMA, learning_rate):
         cls.log = Logger()
         cls.config = Config()
         cls.enable_logging = enable_logging
         cls.validation_metrics = defaultdict(dict)
         cls.cuda_no = 0
-        cls.epochs = 10
-        cls.SIGMA = 1.0
+        cls.epochs = epochs#15
+        cls.SIGMA = SIGMA #12
         cls.batch_size = 1024
-        cls.lr = 1e-4
+        cls.lr = learning_rate #0.001
         cls.device = f"cuda:{cls.cuda_no}" if torch.cuda.is_available() else "cpu"
         cls.class_num_dict = cls.config.get_no_of_classes()
 

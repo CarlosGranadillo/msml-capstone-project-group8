@@ -39,7 +39,7 @@ class RobertaFineTune:
         cls.finetuned_model_name = "roberta-large-finetune-finance"
         cls.max_length = 128
         cls.device = cls.config.get_device()
-        cls.epochs = 3
+        cls.epochs = 10
         cls.base_model_name = "FacebookAI/roberta-large"
 
     @classmethod

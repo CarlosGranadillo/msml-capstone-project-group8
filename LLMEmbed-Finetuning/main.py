@@ -15,7 +15,7 @@ import os
 import warnings
 import torch
 import pandas as pd
-import shutil
+
 
 warnings.filterwarnings("ignore")
 
@@ -72,18 +72,30 @@ def main(
         )
 
     # 3. Run the downstream model on the extracted embeddings
-    metrics_base = Execute(debug).execute(use_finetuned_embeddings = False)
+    epochs = 10
+    SIGMA = 12
+    learning_rate = 0.001
+
+    metrics_base = Execute(
+        debug, epochs=epochs, SIGMA=SIGMA, learning_rate=learning_rate
+    ).execute(use_finetuned_embeddings=False)
     metrics_base_df = pd.DataFrame.from_dict(metrics_base, orient="index")
-    metrics_finetuned = Execute(debug).execute(use_finetuned_embeddings = True)
+    metrics_finetuned = Execute(
+        debug, epochs=epochs, SIGMA=SIGMA, learning_rate=learning_rate
+    ).execute(use_finetuned_embeddings=True)
     metrics_finetuned_df = pd.DataFrame.from_dict(metrics_finetuned, orient="index")
+    filename = f"results_SIGMA={SIGMA}_LR={learning_rate}_EPOCHS={epochs}"
+    Helpers().save_model_results(df=metrics_base_df, finetuned=False, filename=filename)
+    Helpers().save_model_results(df=metrics_finetuned_df, finetuned=True, filename=filename)
+
     print("Metrics for Base LLM's :")
     print(metrics_base_df)
-    print("-"*100)
+    print("-" * 100)
     print("Metrics for Finetuned LLM's :")
     print(metrics_finetuned_df)
 
     # 4. Fine tune the LLM models
-    #FineTune(enable_logging = True).finetune(llama2=False, bert=False, roberta=True)
+    # FineTune(enable_logging = True).finetune(llama2=False, bert=True, roberta=True)
 
 
 if __name__ == "__main__":
@@ -96,5 +108,4 @@ if __name__ == "__main__":
         use_finetuned_model=False,  # True, if we want to use the fine tuned models to extract embeddings, else False.
     )
 
-    
-    
+

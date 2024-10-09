@@ -39,7 +39,7 @@ class BertFineTune:
         cls.finetuned_model_name = "bert-large-uncased-finetune-finance"
         cls.max_length = 128
         cls.device = cls.config.get_device()
-        cls.epochs = 3
+        cls.epochs = 10
         cls.base_model_name = "google-bert/bert-large-uncased"
 
     @classmethod
@@ -92,6 +92,7 @@ class BertFineTune:
         model = model.to(cls.device)
         # Optimizer and scheduler
         optimizer = AdamW(model.parameters(), lr=2e-5, eps=1e-8)
+        
         total_steps = len(tensor_dataset) * 3  # 3 epochs
         scheduler = get_linear_schedule_with_warmup(
             optimizer, num_warmup_steps=0, num_training_steps=total_steps

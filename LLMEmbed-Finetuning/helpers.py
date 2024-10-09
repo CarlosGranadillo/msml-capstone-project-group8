@@ -132,3 +132,16 @@ class Helpers:
             print(f"Cache directory: '{cache_dir}' cleared successfully.")
         else:
             print(f"Cache directory: '{cache_dir}' does not exist.")
+    
+    @classmethod
+    def save_model_results(cls, df, finetuned : bool, filename : str):
+        """
+        This method will save the dataset to a local folder inorder to reuse.
+        """
+        save_path = cls.config.get_base_path() + "results/"
+        folder = "finetuned/" if finetuned else "base/"
+        file_path = save_path + folder
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        df.to_csv(file_path + f"{filename}.csv")
+        print("Saved at :", file_path + f"{filename}.csv")
