@@ -79,7 +79,7 @@ def main(
     print(df)
 
     # 4. Fine tune the LLM models
-    FineTune(enable_logging = True).finetune()
+    #FineTune(enable_logging = True).finetune(llama2=False, bert=False, roberta=True)
 
 
 if __name__ == "__main__":
@@ -92,5 +92,6 @@ if __name__ == "__main__":
         use_finetuned_model=True,  # True, if we want to use the fine tuned models to extract embeddings, else False.
         use_finetuned_embdes=False,  # True, if we want to use the fine tuned embeddings else False.
     )
+
     
     

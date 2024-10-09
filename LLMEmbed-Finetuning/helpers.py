@@ -91,7 +91,7 @@ class Helpers:
             
 
     @classmethod
-    def save_finetuned_model(cls, trainer, model_name: str):
+    def save_finetuned_model(cls, model, tokenizer, model_name: str):
         """
         This method will save the dataset to a local folder inorder to reuse.
         """
@@ -100,8 +100,8 @@ class Helpers:
         print("Saved at :", model_path)
         if not os.path.exists(model_path):
             os.makedirs(model_path)
-        trainer.model.save_pretrained(model_path)
-        trainer.tokenizer.save_pretrained(model_path)
+        model.save_pretrained(model_path)
+        tokenizer.save_pretrained(model_path)
 
     @classmethod
     def read_dataset_from_local(cls, dataset_name: str):

@@ -3,19 +3,13 @@
 """
 
 # General Imports
-import os
 import torch
-from datasets import load_dataset, load_from_disk
+from datasets import load_from_disk
 from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
     BitsAndBytesConfig,
-    HfArgumentParser,
     TrainingArguments,
-    pipeline,
-    logging,
 )
-from peft import LoraConfig, PeftModel
+from peft import LoraConfig
 from trl import SFTTrainer
 
 # Local Imports
@@ -40,6 +34,7 @@ class Llama2FineTune:
         cls.log = Logger()
         cls.llm = LLM(enable_logging=enable_logging)
         cls.enable_logging = enable_logging
+        cls.finetuned_model_name = "Llama-2-7b-chat-finetune-finance"
 
     @classmethod
     def create_llama2_prompt_sentiment_analysis(cls, row):
@@ -184,8 +179,8 @@ class Llama2FineTune:
 
         # Prompt conversion function
         cls.prompt_conversion = {
-            "sentiment_analysis" : cls.create_llama2_prompt_sentiment_analysis,
-            "yes_no_question" : cls.create_llama2_prompt_yes_no_question,
+            "sentiment_analysis": cls.create_llama2_prompt_sentiment_analysis,
+            "yes_no_question": cls.create_llama2_prompt_yes_no_question,
         }
 
     @classmethod
@@ -251,5 +246,5 @@ class Llama2FineTune:
         )
         trainer.train()
 
-        new_model = f"Llama-2-7b-chat-finetune-finance-{task}"
-        cls.helpers.save_finetuned_model(model_name=new_model, trainer=trainer)
+        new_model = f"{cls.finetuned_model_name}-{task}"
+        cls.helpers.save_finetuned_model(model=trainer.model, tokenizer=trainer.tokenizer, model_name=new_model)
