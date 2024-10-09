@@ -54,9 +54,9 @@ class Bert:
             enable_logging=cls.enable_logging,
         )
         if cls.use_finetuned_model:
-            path = f"base/bert_embeddings/{task}/dataset_tensors/"
-        else:
             path = f"finetuned/bert_embeddings/{task}/dataset_tensors/"
+        else:
+            path = f"base/bert_embeddings/{task}/dataset_tensors/"
 
         sentences_reps = []
         step = 64  # Reduced batch size to save memory

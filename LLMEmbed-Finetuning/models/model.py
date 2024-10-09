@@ -241,12 +241,12 @@ class LLM:
         """
         This method returns the tokenizer and model for Roberta.
         """
+        model_name = cls.get_model_name(
+            llm="roberta", use_finetuned_model=use_finetuned_model, task=task
+        )
         cls.log.log(
             message=f"\n[Started] - Loading the tokenizer, model for the {model_name} LLM model.",
             enable_logging=cls.enable_logging,
-        )
-        model_name = cls.get_model_name(
-            llm="roberta", use_finetuned_model=use_finetuned_model, task=task
         )
         tokenizer = RobertaTokenizer.from_pretrained(model_name)
         model = RobertaModel.from_pretrained(model_name).to(cls.device)

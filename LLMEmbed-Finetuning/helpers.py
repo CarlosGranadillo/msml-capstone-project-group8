@@ -82,6 +82,7 @@ class Helpers:
         """
         save_path = cls.config.get_base_path() + "data/"
         file_path = save_path + file_name
+        print("Saved at :", file_path)
         if not os.path.exists(save_path):
             os.makedirs(save_path)
             dataset.save_to_disk(file_path)
@@ -122,7 +123,7 @@ class Helpers:
         """
         This function clears the hugging face cache
         """
-        print("Clearing Hugging Face Cache")
+        print("\nClearing Hugging Face Cache")
         cache_dir = os.path.expanduser("~/.cache/huggingface/")
 
         # Check if the directory exists and remove it

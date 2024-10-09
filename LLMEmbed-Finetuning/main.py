@@ -85,11 +85,11 @@ def main(
 if __name__ == "__main__":
     main(
         debug=True,  # True, if we want to enable debugging, else False.
-        preprocess=True,  # True, if we want to preprocess the data from hugging face, else False.
+        preprocess=False,  # True, if we want to preprocess the data from hugging face, else False.
         save_data_in_local=False,  # True, if we want save the huggingface datasets in local, else False.
         read_data_from_local=True,  # True, if we want to read the data saved in local, else False.
-        extract=True,  # True, if we want to extract the embeddings and save it in local, False, if we want to load the embeddings saved in the local
-        use_finetuned_model=True,  # True, if we want to use the fine tuned models to extract embeddings, else False.
+        extract=False,  # True, if we want to extract the embeddings and save it in local, False, if we want to load the embeddings saved in the local
+        use_finetuned_model=False,  # True, if we want to use the fine tuned models to extract embeddings, else False.
         use_finetuned_embdes=False,  # True, if we want to use the fine tuned embeddings else False.
     )
 

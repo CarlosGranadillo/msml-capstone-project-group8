@@ -54,9 +54,9 @@ class Roberta:
             enable_logging=cls.enable_logging,
         )
         if cls.use_finetuned_model:
-            path = f"base/roberta_embeddings/{task}/dataset_tensors/"
-        else:
             path = f"finetuned/roberta_embeddings/{task}/dataset_tensors/"
+        else:
+            path = f"base/roberta_embeddings/{task}/dataset_tensors/"
 
         sentences_reps = []
         step = 16  # Reduced batch size to save memory
