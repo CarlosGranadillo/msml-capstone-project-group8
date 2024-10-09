@@ -87,12 +87,12 @@ class Config:
 
     @classmethod
     def get_embeddings_path(
-        cls, task: str, mode: str, use_finetuned_embdes: bool
+        cls, task: str, mode: str, use_finetuned_embeddings: bool
     ) -> str:
         """
         This function returns the paths where the embeddings are stored for the LLM's.
         """
-        folder = "finetuned" if use_finetuned_embdes else "base"
+        folder = "finetuned" if use_finetuned_embeddings else "base"
         base_path = cls.get_base_path() + f"embeddings/{folder}/"
         l_path = base_path + f"llama2_embeddings/{task}/dataset_tensors/{mode}_texts.pt"
         b_path = base_path + f"bert_embeddings/{task}/dataset_tensors/{mode}_texts.pt"

@@ -27,7 +27,6 @@ def main(
     save_data_in_local: bool,
     read_data_from_local: bool,
     use_finetuned_model: bool,
-    use_finetuned_embdes: bool,
 ):
     """
     This method is the starting point for the project. It performs the following tasks -
@@ -45,7 +44,6 @@ def main(
     torch.cuda.empty_cache()
 
     # Clear huggingface Cache
-    print("Clearing Hugging Face Cache")
     Helpers().clear_huggingface_cache()
 
     # 1. Preprocess the datasets
@@ -56,7 +54,7 @@ def main(
         )
     else:
         print(
-            "\n----------------------------------Skipping Preprocessing--------------------------------------------------------"
+            "\n----------------------------------Skipping Preprocessing-------------------------------------------------------"
         )
 
     # 2. Extract the embeddings
@@ -65,7 +63,7 @@ def main(
             "sentiment_analysis": datasets["sentiment_analysis"],
             "yes_no_question": datasets["yes_no_question"],
         }
-        embeddings = Embeddings(debug, use_finetuned_model=use_finetuned_model).extract(
+        Embeddings(debug, use_finetuned_model=use_finetuned_model).extract(
             datasets=datasets_to_extract_embeddings
         )
     else:
@@ -74,9 +72,15 @@ def main(
         )
 
     # 3. Run the downstream model on the extracted embeddings
-    metrics = Execute(debug).execute(use_finetuned_embdes)
-    df = pd.DataFrame.from_dict(metrics, orient="index")
-    print(df)
+    metrics_base = Execute(debug).execute(use_finetuned_embeddings = False)
+    metrics_base_df = pd.DataFrame.from_dict(metrics_base, orient="index")
+    metrics_finetuned = Execute(debug).execute(use_finetuned_embeddings = True)
+    metrics_finetuned_df = pd.DataFrame.from_dict(metrics_finetuned, orient="index")
+    print("Metrics for Base LLM's :")
+    print(metrics_base_df)
+    print("-"*100)
+    print("Metrics for Finetuned LLM's :")
+    print(metrics_finetuned_df)
 
     # 4. Fine tune the LLM models
     #FineTune(enable_logging = True).finetune(llama2=False, bert=False, roberta=True)
@@ -90,7 +94,6 @@ if __name__ == "__main__":
         read_data_from_local=True,  # True, if we want to read the data saved in local, else False.
         extract=False,  # True, if we want to extract the embeddings and save it in local, False, if we want to load the embeddings saved in the local
         use_finetuned_model=False,  # True, if we want to use the fine tuned models to extract embeddings, else False.
-        use_finetuned_embdes=False,  # True, if we want to use the fine tuned embeddings else False.
     )
 
     

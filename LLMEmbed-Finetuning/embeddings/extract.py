@@ -47,7 +47,10 @@ class Embeddings:
         Extracting embeddings for only sentiment_analysis and yes_no_question from the dataset.
         Extraction will not be performed on the fine tuning datasets.
         """
-        print("\n[Started] -  Embeddings extraction")
+        cls.log.log(
+                message=f"\n[Started] - Embeddings extraction.",
+                enable_logging=cls.enable_logging,
+        )
 
         for dataset_name, dataset in datasets.items():
             sentences = dataset["text"]
@@ -144,4 +147,7 @@ class Embeddings:
                 tokenizer=llama2_tokenizer,
             )
 
-        print("[Completed] -  Embeddings extraction.")
+        cls.log.log(
+                message=f"[Completed] - Embeddings extraction.",
+                enable_logging=cls.enable_logging,
+        )

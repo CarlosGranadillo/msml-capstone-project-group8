@@ -206,7 +206,7 @@ class Execute:
         cls.validation_metrics[f"{task}_test"]["f1_score"] = round(f1, 4)
 
     @classmethod
-    def execute(cls, use_finetuned_embdes: bool) -> dict:
+    def execute(cls, use_finetuned_embeddings: bool) -> dict:
         """
         The method executes the classification tasks and returns the validation metrics respectively.
         """
@@ -229,7 +229,7 @@ class Execute:
                 task=task,
                 mode="train",
                 enable_logging=cls.enable_logging,
-                use_finetuned_embdes=use_finetuned_embdes,
+                use_finetuned_embeddings=use_finetuned_embeddings,
             )
             train_loader = DataLoader(
                 train_data,
@@ -243,14 +243,14 @@ class Execute:
                 enable_logging=cls.enable_logging,
             )
             logger.log(
-                message=f"\n[Started] - Loading {task} tes embeddings from local.",
+                message=f"\n[Started] - Loading {task} test embeddings from local.",
                 enable_logging=cls.enable_logging,
             )
             test_data = Data(
                 task=task,
                 mode="test",
                 enable_logging=cls.enable_logging,
-                use_finetuned_embdes=use_finetuned_embdes,
+                use_finetuned_embeddings=use_finetuned_embeddings,
             )
             test_loader = DataLoader(
                 test_data,
