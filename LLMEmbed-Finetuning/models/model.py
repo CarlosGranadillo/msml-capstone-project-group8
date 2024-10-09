@@ -30,15 +30,15 @@ class DownstreamModel(nn.Module):
             layers = []
             layers.append(nn.Linear(4096, 1024))
             layers.append(nn.ReLU())
-            layers.append(nn.Dropout(0.5))
+            layers.append(nn.Dropout(0.2))
             self.compress_layers.append(nn.Sequential(*layers))
 
         self.fc1 = nn.Linear(4145, 1024)
         self.relu1 = nn.ReLU()
-        self.dropout1 = nn.Dropout(0.5)
+        self.dropout1 = nn.Dropout(0.2)
         self.fc2 = nn.Linear(1024, 256)
         self.relu2 = nn.ReLU()
-        self.dropout2 = nn.Dropout(0.5)
+        self.dropout2 = nn.Dropout(0.2)
         self.fc3 = nn.Linear(256, class_num)
         self.softmax = nn.Softmax(dim=1)
 

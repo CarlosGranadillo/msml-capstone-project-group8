@@ -72,8 +72,8 @@ def main(
         )
 
     # 3. Run the downstream model on the extracted embeddings
-    epochs = 10
-    SIGMA = 12
+    epochs = 100
+    SIGMA = 15
     learning_rate = 0.001
 
     metrics_base = Execute(
@@ -101,7 +101,7 @@ def main(
 if __name__ == "__main__":
     main(
         debug=True,  # True, if we want to enable debugging, else False.
-        preprocess=False,  # True, if we want to preprocess the data from hugging face, else False.
+        preprocess=True,  # True, if we want to preprocess the data from hugging face, else False.
         save_data_in_local=False,  # True, if we want save the huggingface datasets in local, else False.
         read_data_from_local=True,  # True, if we want to read the data saved in local, else False.
         extract=False,  # True, if we want to extract the embeddings and save it in local, False, if we want to load the embeddings saved in the local
