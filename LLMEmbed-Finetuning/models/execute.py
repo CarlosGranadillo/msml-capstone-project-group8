@@ -32,10 +32,10 @@ class Execute:
         cls.enable_logging = enable_logging
         cls.validation_metrics = defaultdict(dict)
         cls.cuda_no = 0
-        cls.epochs = epochs#15
-        cls.SIGMA = SIGMA #12
+        cls.epochs = epochs
+        cls.SIGMA = SIGMA 
         cls.batch_size = 1024
-        cls.lr = learning_rate #0.001
+        cls.lr = learning_rate 
         cls.device = f"cuda:{cls.cuda_no}" if torch.cuda.is_available() else "cpu"
         cls.class_num_dict = cls.config.get_no_of_classes()
 

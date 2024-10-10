@@ -41,7 +41,7 @@ class Embeddings:
         cls.device = cls.config.get_device()
 
     @classmethod
-    def extract(cls, datasets) -> dict:
+    def extract(cls, datasets, bert : bool, roberta : bool, llama2 : bool) -> dict:
         """
         This method extracts the embeddings using the LLM's.
         Extracting embeddings for only sentiment_analysis and yes_no_question from the dataset.
@@ -63,89 +63,91 @@ class Embeddings:
                 labels_test,
             ) = train_test_split(sentences, labels, test_size=0.2, random_state=42)
 
-            # Bert Training data emebeddings extraction
-            cls.helpers.clear_huggingface_cache()
-            torch.cuda.empty_cache()
-            bert_tokenizer, bert_model = cls.llm.get_bert(
-                use_finetuned_model=cls.use_finetuned_model, task=dataset_name
-            )
-            bert_model.eval()
-            cls.bert.extract_bert_embeddings(
-                mode="train",
-                device=cls.device,
-                sentences=sentences_train,
-                labels=labels_train,
-                task=dataset_name,
-                model=bert_model,
-                tokenizer=bert_tokenizer,
-            )
+            if bert:
+                # Bert Training data emebeddings extraction
+                cls.helpers.clear_huggingface_cache()
+                torch.cuda.empty_cache()
+                bert_tokenizer, bert_model = cls.llm.get_bert(
+                    use_finetuned_model=cls.use_finetuned_model, task=dataset_name
+                )
+                bert_model.eval()
+                cls.bert.extract_bert_embeddings(
+                    mode="train",
+                    device=cls.device,
+                    sentences=sentences_train,
+                    labels=labels_train,
+                    task=dataset_name,
+                    model=bert_model,
+                    tokenizer=bert_tokenizer,
+                )
 
-            # Bert Testing data emebeddings extraction
-            cls.bert.extract_bert_embeddings(
-                mode="test",
-                device=cls.device,
-                sentences=sentences_test,
-                labels=labels_test,
-                task=dataset_name,
-                model=bert_model,
-                tokenizer=bert_tokenizer,
-            )
+                # Bert Testing data emebeddings extraction
+                cls.bert.extract_bert_embeddings(
+                    mode="test",
+                    device=cls.device,
+                    sentences=sentences_test,
+                    labels=labels_test,
+                    task=dataset_name,
+                    model=bert_model,
+                    tokenizer=bert_tokenizer,
+                )
 
-            # Roberta Training emebeddings extraction
-            cls.helpers.clear_huggingface_cache()
-            torch.cuda.empty_cache()
-            roberta_tokenizer, roberta_model = cls.llm.get_roberta(
-                use_finetuned_model=cls.use_finetuned_model, task=dataset_name
-            )
-            roberta_model.eval()
-            cls.roberta.extract_roberta_embeddings(
-                mode="train",
-                device=cls.device,
-                sentences=sentences_train,
-                labels=labels_train,
-                task=dataset_name,
-                model=roberta_model,
-                tokenizer=roberta_tokenizer,
-            )
+            if roberta:
+                # Roberta Training emebeddings extraction
+                cls.helpers.clear_huggingface_cache()
+                torch.cuda.empty_cache()
+                roberta_tokenizer, roberta_model = cls.llm.get_roberta(
+                    use_finetuned_model=cls.use_finetuned_model, task=dataset_name
+                )
+                roberta_model.eval()
+                cls.roberta.extract_roberta_embeddings(
+                    mode="train",
+                    device=cls.device,
+                    sentences=sentences_train,
+                    labels=labels_train,
+                    task=dataset_name,
+                    model=roberta_model,
+                    tokenizer=roberta_tokenizer,
+                )
 
-            # Roberta Testing emebeddings extraction
-            cls.roberta.extract_roberta_embeddings(
-                mode="test",
-                device=cls.device,
-                sentences=sentences_test,
-                labels=labels_test,
-                task=dataset_name,
-                model=roberta_model,
-                tokenizer=roberta_tokenizer,
-            )
+                # Roberta Testing emebeddings extraction
+                cls.roberta.extract_roberta_embeddings(
+                    mode="test",
+                    device=cls.device,
+                    sentences=sentences_test,
+                    labels=labels_test,
+                    task=dataset_name,
+                    model=roberta_model,
+                    tokenizer=roberta_tokenizer,
+                )
+            if llama2:
+                # Llama2 Training emebeddings extraction
+                cls.helpers.clear_huggingface_cache()
+                torch.cuda.empty_cache()
+                llama2_tokenizer, llama2_model = cls.llm.get_llama2(
+                    use_finetuned_model=cls.use_finetuned_model, task=dataset_name
+                )
+                llama2_model.eval()
+                cls.llama2.extract_llama2_embeddings(
+                    mode="train",
+                    device=cls.device,
+                    sentences=sentences_train,
+                    labels=labels_train,
+                    task=dataset_name,
+                    model=llama2_model,
+                    tokenizer=llama2_tokenizer,
+                )
 
-            # Llama2 Training emebeddings extraction
-            cls.helpers.clear_huggingface_cache()
-            torch.cuda.empty_cache()
-            llama2_tokenizer, llama2_model = cls.llm.get_llama2(
-                use_finetuned_model=cls.use_finetuned_model, task=dataset_name
-            )
-            llama2_model.eval()
-            cls.llama2.extract_llama2_embeddings(
-                mode="train",
-                device=cls.device,
-                sentences=sentences_train,
-                labels=labels_train,
-                task=dataset_name,
-                model=llama2_model,
-                tokenizer=llama2_tokenizer,
-            )
-
-            # Llama2 Testing emebeddings extraction
-            cls.llama2.extract_llama2_embeddings(
-                mode="test",
-                device=cls.device,
-                sentences=sentences_test,
-                labels=labels_test,
-                task=dataset_name,
-                model=llama2_model,
-                tokenizer=llama2_tokenizer,
-            )
+                # Llama2 Testing emebeddings extraction
+                cls.llama2.extract_llama2_embeddings(
+                    mode="test",
+                    device=cls.device,
+                    sentences=sentences_test,
+                    labels=labels_test,
+                    task=dataset_name,
+                    model=llama2_model,
+                    tokenizer=llama2_tokenizer,
+                )
 
         cls.log.log(
                 message=f"[Completed] - Embeddings extraction.",

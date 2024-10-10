@@ -82,13 +82,10 @@ class Helpers:
         """
         save_path = cls.config.get_base_path() + "data/"
         file_path = save_path + file_name
-        print("Saved at :", file_path)
+        print("\t\tSaved at :", file_path)
         if not os.path.exists(save_path):
             os.makedirs(save_path)
-            dataset.save_to_disk(file_path)
-        elif os.path.exists(file_path):
-            shutil.rmtree(file_path)
-            dataset.save_to_disk(file_path)
+        dataset.save_to_disk(file_path)
             
 
     @classmethod

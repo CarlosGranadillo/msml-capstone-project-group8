@@ -3,6 +3,7 @@
 """
 
 # General Imports
+import time
 import torch
 from datasets import load_from_disk
 from torch.utils.data import DataLoader, TensorDataset
@@ -39,7 +40,7 @@ class RobertaFineTune:
         cls.finetuned_model_name = "roberta-large-finetune-finance"
         cls.max_length = 128
         cls.device = cls.config.get_device()
-        cls.epochs = 10
+        cls.epochs = 3
         cls.base_model_name = "FacebookAI/roberta-large"
 
     @classmethod
@@ -97,6 +98,8 @@ class RobertaFineTune:
             optimizer, num_warmup_steps=0, num_training_steps=total_steps
         )
         tensor_dataset_loader = DataLoader(tensor_dataset, batch_size=16)
+
+        start_time = time.time()
         for epoch in range(cls.epochs):
             print(f"\n[Started] - Epoch {epoch+1}")
             model.train()
@@ -120,7 +123,14 @@ class RobertaFineTune:
 
             print(f"Epoch {epoch+1} Loss: {total_loss/len(tensor_dataset)}")
             print(f"[Completed] - Epoch {epoch+1}")
-            
+
+        end_time = time.time()
+        # Calculate the time difference
+        elapsed_time = end_time - start_time
+        minutes = int(elapsed_time // 60)
+        seconds = int(elapsed_time % 60)
+        formatted_time = f"{minutes:02}:{seconds:02}"
+        print(f"Time taken for finetuning of bert on {task}: {formatted_time}")
 
         new_model = f"{cls.finetuned_model_name}-{task}"
         cls.helpers.save_finetuned_model(model=model, tokenizer=tokenizer, model_name=new_model)

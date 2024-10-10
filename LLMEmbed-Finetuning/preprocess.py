@@ -8,9 +8,11 @@ from helpers import Helpers
 from logger import Logger
 
 # General Imports
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 import warnings
 import numpy as np
+import pandas as pd
+import re
 
 warnings.filterwarnings("ignore")
 
@@ -25,9 +27,10 @@ class Preprocess:
         5. Seggregate the Sujet-Finance-Instruct-177k dataset according to the task types.
         6. Check for the null rows and drop them if required.
         7. Check for the duplicate rows and drop them if required.
-        8. Create seperate datasets for fine tuning and normal flow.
-        9. Replace the string labels with integers in Sujet-Finance-Instruct-177k dataset.
-        10. Return the final required datasets.
+        8. Peform preprocessing of yes no question data, i.e, exploding the rows.
+        9. Create seperate datasets for fine tuning and normal flow.
+        10. Replace the string labels with integers in Sujet-Finance-Instruct-177k dataset.
+        11. Return the final required datasets.
     """
 
     @classmethod
@@ -49,7 +52,7 @@ class Preprocess:
         This method will load the datasets and save in a dictionary as key value pair.
         """
         datasets = {}
-        datasets["sujet_finance"] = load_dataset("sujet-ai/Sujet-Finance-Instruct-177k")
+        datasets["sujet_finance"] = load_dataset("sujet-ai/Sujet-Finance-Instruct-177k")["train"]
         return datasets
 
     @classmethod
@@ -58,7 +61,7 @@ class Preprocess:
         This method will convert the hugging face datasets into pandas dataframe for better visualization.
         """
         df = {}
-        df["sujet_finance"] = cls.temp_datasets["sujet_finance"]["train"].to_pandas()
+        df["sujet_finance"] = cls.temp_datasets["sujet_finance"].to_pandas()
         return df
 
     @classmethod
@@ -121,24 +124,24 @@ class Preprocess:
                 message=f"\n\t[Started] - Null rows removal for {dataset_name}.",
                 enable_logging=cls.enable_logging,
             )
-            column_names = dataset["train"].column_names
+            column_names = dataset.column_names
             cls.log.log(
-                message=f"\t\tNo.of rows in {dataset_name} : {len(dataset['train'])}",
+                message=f"\t\tNo.of rows in {dataset_name} : {len(dataset)}.",
                 enable_logging=cls.enable_logging,
             )
-            filtered_dataset = dataset["train"].filter(
+            filtered_dataset = dataset.filter(
                 lambda example: all(
                     example[col] is not None
                     and not (isinstance(example[col], float) and np.isnan(example[col]))
                     for col in column_names
                 )
             )
-            no_of_null_rows = len(dataset["train"]) - len(filtered_dataset)
+            no_of_null_rows = len(dataset) - len(filtered_dataset)
             cls.log.log(
-                message=f"\t\tRemoved {no_of_null_rows} null rows in {dataset_name}",
+                message=f"\t\tRemoved {no_of_null_rows} null rows in {dataset_name}.",
                 enable_logging=cls.enable_logging,
             )
-            datasets[dataset_name]["train"] = filtered_dataset
+            datasets[dataset_name] = filtered_dataset
             cls.log.log(
                 message=f"\t[Completed] - Null rows removal for {dataset_name}.",
                 enable_logging=cls.enable_logging,
@@ -156,22 +159,22 @@ class Preprocess:
                 enable_logging=cls.enable_logging,
             )
             unique = set()
-            column_names = dataset["train"].column_names
+            column_names = dataset.column_names
             cls.log.log(
-                message=f"\t\tNo.of rows in {dataset_name} : {len(dataset['train'])}",
+                message=f"\t\tNo.of rows in {dataset_name} : {len(dataset)}.",
                 enable_logging=cls.enable_logging,
             )
-            unique_dataset = dataset["train"].filter(
+            unique_dataset = dataset.filter(
                 lambda example: not tuple(example[col] for col in column_names)
                 in unique
                 and not unique.add(tuple(example[col] for col in column_names))
             )
-            no_of_duplicate_rows = len(dataset["train"]) - len(unique_dataset)
+            no_of_duplicate_rows = len(dataset) - len(unique_dataset)
             cls.log.log(
-                message=f"\t\tRemoved {no_of_duplicate_rows} duplicate rows in {dataset_name}",
+                message=f"\t\tRemoved {no_of_duplicate_rows} duplicate rows in {dataset_name}.",
                 enable_logging=cls.enable_logging,
             )
-            datasets[dataset_name]["train"] = unique_dataset
+            datasets[dataset_name] = unique_dataset
             cls.log.log(
                 message=f"\t[Completed] - Duplicate rows removal for {dataset_name}.",
                 enable_logging=cls.enable_logging,
@@ -240,7 +243,7 @@ class Preprocess:
         """
         temp_dict = {}
         for dataset_name, dataset in datasets.items():
-            dataset_split = dataset["train"].train_test_split(
+            dataset_split = dataset.train_test_split(
                 test_size=cls.fine_tune_split_size, seed=cls.seed
             )
             fine_tuned_dataset = dataset_split["test"].shuffle(seed=cls.seed)
@@ -253,12 +256,46 @@ class Preprocess:
         return datasets
 
     @classmethod
-    def read_data_from_local(cls) -> dict:
+    def split_text_and_label(cls, question):
         """
-        This function returns the datasets that are stored in a local directory.
+        This function performs the yes no preprocessing.
         """
-        datasets = {}
-        return datasets
+        # Use regex to find the last occurrence of " yes" or " no" (case-insensitive) at the end
+        match = re.search(r"\s(yes|no)$", question.strip(), re.IGNORECASE)
+        if match:
+            # Split the question into 'text' and 'label'
+            text = question[: match.start()].strip()  # Everything before "yes" or "no"
+            label = match.group(1).lower()
+            return text, label
+        return question, None  # If no match is found, return the full question and None
+
+    @classmethod
+    def explode_yes_no_question_data(cls, dataset):
+        """
+        This function explodes the rows in the yes no question dataset.
+        """
+        df = dataset.to_pandas()
+        df["text_w_final_answer"] = df.apply(
+            lambda row: row["text"].strip() + f" {row['label'].strip()}", axis=1
+        )
+        # Split the 'text_w_final_answer' by '\n' to create a list of questions for each row
+        df["questions_split"] = df["text_w_final_answer"].str.split("\n\n")
+        # Explode the 'questions_split' list into separate rows
+        df_exploded = df.explode("questions_split")
+        df_exploded = df_exploded.rename(columns={"questions_split": "question"})
+        df_exploded[["text", "label"]] = df_exploded["question"].apply(
+            lambda x: pd.Series(cls.split_text_and_label(x))
+        )
+        final_yes_no_df = df_exploded[["text", "label"]]
+        final_yes_no_df = final_yes_no_df.dropna()
+        final_yes_no_df = final_yes_no_df.sample(frac=1).head(
+            35000
+        )  # sample 35,000 rows
+
+        return_dataset = Dataset.from_pandas(final_yes_no_df).remove_columns(
+            "__index_level_0__"
+        )
+        return return_dataset
 
     @classmethod
     def preprocess(cls, save_data_in_local: bool, read_data_from_local: bool) -> dict:
@@ -367,7 +404,22 @@ class Preprocess:
                 enable_logging=cls.enable_logging,
             )
 
-            # 8. Create seperate datasets for fine tuning and normal flow.
+            # 8. Peform preprocessing of yes no question data, i.e, exploding the rows.
+            logger.log(
+                message="\n[Started] - Perform exploding the rows for yes no question dataset.",
+                enable_logging=cls.enable_logging,
+            )
+            cls.temp_datasets["sujet_finance_yes_no_question"] = (
+                cls.explode_yes_no_question_data(
+                    dataset=cls.temp_datasets["sujet_finance_yes_no_question"]
+                )
+            )
+            logger.log(
+                message="[Completed] - Perform exploding the rows for yes no question dataset.",
+                enable_logging=cls.enable_logging,
+            )
+            
+            # 9. Create seperate datasets for fine tuning and normal flow.
             logger.log(
                 message="\n[Started] - Create seperate datasets for fine tuning and normal flow.",
                 enable_logging=cls.enable_logging,
@@ -378,7 +430,7 @@ class Preprocess:
                 enable_logging=cls.enable_logging,
             )
 
-            # 9. Replace the string labels with integers in Sujet-Finance-Instruct-177k dataset.
+            # 10. Replace the string labels with integers in Sujet-Finance-Instruct-177k dataset.
             logger.log(
                 message="\n[Started] - Convert the string labels to integers in the Sujet-Finance-Instruct-177k dataset.",
                 enable_logging=cls.enable_logging,
@@ -391,7 +443,7 @@ class Preprocess:
                 enable_logging=cls.enable_logging,
             )
 
-            # 10. Return the final required datasets.
+            # 11. Return the final required datasets.
             datasets = {
                 "sujet_finance": cls.temp_datasets["sujet_finance"],
                 "sentiment_analysis": cls.temp_datasets[
