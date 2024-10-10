@@ -26,16 +26,16 @@ class Execute:
     """
 
     @classmethod
-    def __init__(cls, enable_logging):
+    def __init__(cls, enable_logging, epochs, SIGMA, learning_rate):
         cls.log = Logger()
         cls.config = Config()
         cls.enable_logging = enable_logging
         cls.validation_metrics = defaultdict(dict)
         cls.cuda_no = 0
-        cls.epochs = 10
-        cls.SIGMA = 1.0
+        cls.epochs = epochs#15
+        cls.SIGMA = SIGMA #12
         cls.batch_size = 1024
-        cls.lr = 1e-4
+        cls.lr = learning_rate #0.001
         cls.device = f"cuda:{cls.cuda_no}" if torch.cuda.is_available() else "cpu"
         cls.class_num_dict = cls.config.get_no_of_classes()
 
@@ -206,7 +206,7 @@ class Execute:
         cls.validation_metrics[f"{task}_test"]["f1_score"] = round(f1, 4)
 
     @classmethod
-    def execute(cls) -> dict:
+    def execute(cls, use_finetuned_embeddings: bool) -> dict:
         """
         The method executes the classification tasks and returns the validation metrics respectively.
         """
@@ -226,7 +226,10 @@ class Execute:
                 enable_logging=cls.enable_logging,
             )
             train_data = Data(
-                task=task, mode="train", enable_logging=cls.enable_logging
+                task=task,
+                mode="train",
+                enable_logging=cls.enable_logging,
+                use_finetuned_embeddings=use_finetuned_embeddings,
             )
             train_loader = DataLoader(
                 train_data,
@@ -240,10 +243,15 @@ class Execute:
                 enable_logging=cls.enable_logging,
             )
             logger.log(
-                message=f"\n[Started] - Loading {task} tes embeddings from local.",
+                message=f"\n[Started] - Loading {task} test embeddings from local.",
                 enable_logging=cls.enable_logging,
             )
-            test_data = Data(task=task, mode="test", enable_logging=cls.enable_logging)
+            test_data = Data(
+                task=task,
+                mode="test",
+                enable_logging=cls.enable_logging,
+                use_finetuned_embeddings=use_finetuned_embeddings,
+            )
             test_loader = DataLoader(
                 test_data,
                 batch_size=cls.batch_size,

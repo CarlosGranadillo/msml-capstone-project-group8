@@ -17,7 +17,9 @@ class Data(Dataset):
     """
 
     @classmethod
-    def __init__(cls, task: str, mode: str, enable_logging: bool):
+    def __init__(
+        cls, task: str, mode: str, enable_logging: bool, use_finetuned_embeddings: bool
+    ):
         """
         This method inializes the instances and other variables and load embeddings.
         """
@@ -30,7 +32,9 @@ class Data(Dataset):
             b_sentences_path,
             r_sentences_path,
             labels_path,
-        ) = cls.config.get_embeddings_path(task=task, mode=mode)
+        ) = cls.config.get_embeddings_path(
+            task=task, mode=mode, use_finetuned_embeddings=use_finetuned_embeddings
+        )
 
         cls.l_sentences_reps = torch.load(l_sentences_path)
         cls.b_sentences_reps = torch.load(b_sentences_path)

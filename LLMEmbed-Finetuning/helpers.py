@@ -30,13 +30,19 @@ class Helpers:
         return example
 
     @classmethod
-    def replace_string_with_int(
-        cls, example, mapping: dict, column_to_modify: str
-    ) -> int:
+    def replace_string_with_int(cls, example, mapping: dict, column_to_modify: str):
         """
-        This function converts string values to integers in a specific column
+        This function converts string values to integers in a specific column.
         """
         example[column_to_modify] = mapping.get(example[column_to_modify], -1)
+        return example
+
+    @classmethod
+    def replace_int_with_string(cls, example, mapping: dict, column_to_modify: str):
+        """
+        This function converts integer values to string in a specific column.
+        """
+        example[column_to_modify] = mapping.get(example[column_to_modify], "None")
         return example
 
     @classmethod
@@ -67,6 +73,7 @@ class Helpers:
             sentences_embeds.to("cpu"), save_path + file_path + f"{mode}_texts.pt"
         )
         torch.save(labels, save_path + file_path + f"{mode}_labels.pt")
+        print(f"Saved at :", save_path + file_path)
 
     @classmethod
     def save_dataset(cls, dataset, file_name: str):
@@ -75,18 +82,32 @@ class Helpers:
         """
         save_path = cls.config.get_base_path() + "data/"
         file_path = save_path + file_name
+        print("Saved at :", file_path)
         if not os.path.exists(save_path):
             os.makedirs(save_path)
+            dataset.save_to_disk(file_path)
         elif os.path.exists(file_path):
             shutil.rmtree(file_path)
             dataset.save_to_disk(file_path)
-        else:
-            dataset.save_to_disk(file_path)
+            
+
+    @classmethod
+    def save_finetuned_model(cls, model, tokenizer, model_name: str):
+        """
+        This method will save the dataset to a local folder inorder to reuse.
+        """
+        save_path = cls.config.get_base_path() + "finetuned_models/"
+        model_path = save_path + model_name
+        print("Saved at :", model_path)
+        if not os.path.exists(model_path):
+            os.makedirs(model_path)
+        model.save_pretrained(model_path)
+        tokenizer.save_pretrained(model_path)
 
     @classmethod
     def read_dataset_from_local(cls, dataset_name: str):
         """
-        This dataset loads the data from a local directory.
+        This function loads the data from a local directory.
         """
         load_path = cls.config.get_base_path() + "data/" + dataset_name
         if not os.path.exists(load_path):
@@ -96,3 +117,31 @@ class Helpers:
             return
         dataset = load_from_disk(load_path)
         return dataset
+
+    @classmethod
+    def clear_huggingface_cache(cls):
+        """
+        This function clears the hugging face cache
+        """
+        print("\nClearing Hugging Face Cache")
+        cache_dir = os.path.expanduser("~/.cache/huggingface/")
+
+        # Check if the directory exists and remove it
+        if os.path.exists(cache_dir):
+            shutil.rmtree(cache_dir)  # Recursively delete the directory
+            print(f"Cache directory: '{cache_dir}' cleared successfully.")
+        else:
+            print(f"Cache directory: '{cache_dir}' does not exist.")
+    
+    @classmethod
+    def save_model_results(cls, df, finetuned : bool, filename : str):
+        """
+        This method will save the dataset to a local folder inorder to reuse.
+        """
+        save_path = cls.config.get_base_path() + "results/"
+        folder = "finetuned/" if finetuned else "base/"
+        file_path = save_path + folder
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        df.to_csv(file_path + f"{filename}.csv")
+        print("Saved at :", file_path + f"{filename}.csv")
