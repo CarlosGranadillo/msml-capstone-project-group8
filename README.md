@@ -6,7 +6,7 @@ Repository containing all code and implementation files related to LLMEmbed.
 
 # Code setup
 * Clone the repository from the url - https://github.com/CarlosGranadillo/msml-capstone-project-group8.git.
-* Chnage the directory to `cd LLMEmbed-Finetuning`.
+* Change the directory to `cd LLMEmbed-Finetuning`.
 * Run the following command `python main.py` or `python3 main.py`.
 
 # Code flow
