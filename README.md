@@ -7,7 +7,7 @@ Repository containing all code and implementation files related to Group 8's cap
 3. the tasks performed in this project are `sentiment analysis` and `yes no question`
 
 # code flow
-`[dataload]` -> `[preprocess]` -> `[embedding extraction (base llm's)]` -> `[fine tune llm's]` -> `[embedding extraction (finetuned llm's)]` -> `[run downstream model on both embeddings]` -> `[compare model resuts]`
+`dataload` -> `preprocess` -> `embedding extraction (base llm's)` -> `fine tune llm's` -> `embedding extraction (finetuned llm's)` -> `run downstream model on both embeddings` -> `compare model resuts`
 
 # run steps
 1. set the following boolean values according to the tasks below as the `main` function parameters
