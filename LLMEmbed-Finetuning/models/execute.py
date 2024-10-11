@@ -29,15 +29,17 @@ class Execute:
     def __init__(cls, enable_logging, epochs, SIGMA, learning_rate):
         cls.log = Logger()
         cls.config = Config()
+        cls.helpers = Helpers()
         cls.enable_logging = enable_logging
         cls.validation_metrics = defaultdict(dict)
         cls.cuda_no = 0
-        cls.epochs = epochs#15
-        cls.SIGMA = SIGMA #12
+        cls.epochs = epochs
+        cls.SIGMA = SIGMA
         cls.batch_size = 1024
-        cls.lr = learning_rate #0.001
+        cls.lr = learning_rate
         cls.device = f"cuda:{cls.cuda_no}" if torch.cuda.is_available() else "cpu"
         cls.class_num_dict = cls.config.get_no_of_classes()
+        cls.seed = 0
 
     @classmethod
     def train_multi_class(cls, dataloader, model, loss_fn, optimizer, task):
@@ -206,129 +208,125 @@ class Execute:
         cls.validation_metrics[f"{task}_test"]["f1_score"] = round(f1, 4)
 
     @classmethod
-    def execute(cls, use_finetuned_embeddings: bool) -> dict:
+    def execute(cls, use_finetuned_embeddings: bool, task: str) -> dict:
         """
         The method executes the classification tasks and returns the validation metrics respectively.
         """
+        torch.cuda.empty_cache()
+        cls.helpers.set_seed(cls.seed)
         logger = cls.log
         logger.log(
             message="\n[Started] - Model Execution",
             enable_logging=cls.enable_logging,
         )
-        tasks = cls.config.get_selected_task_types()
-        for task in tasks:
-            class_num = cls.class_num_dict[task]
-            model = DownstreamModel(class_num, cls.SIGMA).to(cls.device)
-            loss_fn = nn.CrossEntropyLoss().to(cls.device)
-            optimizer = optim.Adam(model.parameters(), cls.lr)
+        class_num = cls.class_num_dict[task]
+        model = DownstreamModel(class_num, cls.SIGMA).to(cls.device)
+        loss_fn = nn.CrossEntropyLoss().to(cls.device)
+        optimizer = optim.Adam(model.parameters(), cls.lr)
+        logger.log(
+            message=f"\n[Started] - Loading {task} train embeddings from local.",
+            enable_logging=cls.enable_logging,
+        )
+        train_data = Data(
+            task=task,
+            mode="train",
+            enable_logging=cls.enable_logging,
+            use_finetuned_embeddings=use_finetuned_embeddings,
+        )
+        train_loader = DataLoader(
+            train_data,
+            batch_size=cls.batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True,
+        )
+        logger.log(
+            message=f"[Completed] - Loading {task} train embeddings from local.",
+            enable_logging=cls.enable_logging,
+        )
+        logger.log(
+            message=f"\n[Started] - Loading {task} test embeddings from local.",
+            enable_logging=cls.enable_logging,
+        )
+        test_data = Data(
+            task=task,
+            mode="test",
+            enable_logging=cls.enable_logging,
+            use_finetuned_embeddings=use_finetuned_embeddings,
+        )
+        test_loader = DataLoader(
+            test_data,
+            batch_size=cls.batch_size,
+            shuffle=False,
+            num_workers=4,
+            pin_memory=True,
+        )
+        logger.log(
+            message=f"[Completed] - Loading {task} test embeddings from local.",
+            enable_logging=cls.enable_logging,
+        )
+        if class_num > 2:
             logger.log(
-                message=f"\n[Started] - Loading {task} train embeddings from local.",
+                message=f"\n[Started] - {task} - Training",
                 enable_logging=cls.enable_logging,
             )
-            train_data = Data(
-                task=task,
-                mode="train",
+            for epoch in range(cls.epochs):
+                model = model.to(cls.device)
+                print(
+                    f"--------------------------- Epoch {epoch+1}/{cls.epochs} ---------------------------"
+                )
+                cls.train_multi_class(
+                    dataloader=train_loader,
+                    model=model,
+                    loss_fn=loss_fn,
+                    optimizer=optimizer,
+                    task=task,
+                )
+            logger.log(
+                message=f"[Completed] - {task} - Training",
                 enable_logging=cls.enable_logging,
-                use_finetuned_embeddings=use_finetuned_embeddings,
-            )
-            train_loader = DataLoader(
-                train_data,
-                batch_size=cls.batch_size,
-                shuffle=True,
-                num_workers=4,
-                pin_memory=True,
             )
             logger.log(
-                message=f"[Completed] - Loading {task} train embeddings from local.",
+                message=f"\n[Started] - {task} - Testing",
+                enable_logging=cls.enable_logging,
+            )
+            cls.test_multi_class(
+                dataloader=test_loader, model=model, loss_fn=loss_fn, task=task
+            )
+            logger.log(
+                message=f"[Completed] - {task} - Testing",
+                enable_logging=cls.enable_logging,
+            )
+        elif class_num == 2:
+            logger.log(
+                message=f"\n[Started] - {task} - Training",
+                enable_logging=cls.enable_logging,
+            )
+            for epoch in range(cls.epochs):
+                model = model.to(cls.device)
+                print(
+                    f"--------------------------- Epoch {epoch+1}/{cls.epochs} ---------------------------"
+                )
+                cls.train(
+                    dataloader=train_loader,
+                    model=model,
+                    loss_fn=loss_fn,
+                    optimizer=optimizer,
+                    task=task,
+                )
+            logger.log(
+                message=f"[Completed] - {task} - Training",
                 enable_logging=cls.enable_logging,
             )
             logger.log(
-                message=f"\n[Started] - Loading {task} test embeddings from local.",
+                message=f"\n[Started] - {task} - Testing",
                 enable_logging=cls.enable_logging,
             )
-            test_data = Data(
-                task=task,
-                mode="test",
-                enable_logging=cls.enable_logging,
-                use_finetuned_embeddings=use_finetuned_embeddings,
-            )
-            test_loader = DataLoader(
-                test_data,
-                batch_size=cls.batch_size,
-                shuffle=False,
-                num_workers=4,
-                pin_memory=True,
-            )
+            cls.test(dataloader=test_loader, model=model, loss_fn=loss_fn, task=task)
             logger.log(
-                message=f"[Completed] - Loading {task} test embeddings from local.",
+                message=f"[Completed] - {task} - Testing",
                 enable_logging=cls.enable_logging,
             )
-            if class_num > 2:
-                logger.log(
-                    message=f"\n[Started] - {task} - Training",
-                    enable_logging=cls.enable_logging,
-                )
-                for epoch in range(cls.epochs):
-                    model = model.to(cls.device)
-                    print(
-                        f"--------------------------- Epoch {epoch+1}/{cls.epochs} ---------------------------"
-                    )
-                    cls.train_multi_class(
-                        dataloader=train_loader,
-                        model=model,
-                        loss_fn=loss_fn,
-                        optimizer=optimizer,
-                        task=task,
-                    )
-                logger.log(
-                    message=f"[Completed] - {task} - Training",
-                    enable_logging=cls.enable_logging,
-                )
-                logger.log(
-                    message=f"\n[Started] - {task} - Testing",
-                    enable_logging=cls.enable_logging,
-                )
-
-                cls.test_multi_class(
-                    dataloader=test_loader, model=model, loss_fn=loss_fn, task=task
-                )
-                logger.log(
-                    message=f"[Completed] - {task} - Testing",
-                    enable_logging=cls.enable_logging,
-                )
-            elif class_num == 2:
-                logger.log(
-                    message=f"\n[Started] - {task} - Training",
-                    enable_logging=cls.enable_logging,
-                )
-                for epoch in range(cls.epochs):
-                    model = model.to(cls.device)
-                    print(
-                        f"--------------------------- Epoch {epoch+1}/{cls.epochs} ---------------------------"
-                    )
-                    cls.train(
-                        dataloader=train_loader,
-                        model=model,
-                        loss_fn=loss_fn,
-                        optimizer=optimizer,
-                        task=task,
-                    )
-                logger.log(
-                    message=f"[Completed] - {task} - Training",
-                    enable_logging=cls.enable_logging,
-                )
-
-                logger.log(
-                    message=f"\n[Started] - {task} - Testing",
-                    enable_logging=cls.enable_logging,
-                )
-                cls.test(
-                    dataloader=test_loader, model=model, loss_fn=loss_fn, task=task
-                )
-                logger.log(
-                    message=f"[Completed] - {task} - Testing",
-                    enable_logging=cls.enable_logging,
-                )
 
         logger.log(
             message="[Completed] - Model Execution",

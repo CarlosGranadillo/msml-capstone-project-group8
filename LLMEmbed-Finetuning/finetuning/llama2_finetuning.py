@@ -247,4 +247,6 @@ class Llama2FineTune:
         trainer.train()
 
         new_model = f"{cls.finetuned_model_name}-{task}"
-        cls.helpers.save_finetuned_model(model=trainer.model, tokenizer=trainer.tokenizer, model_name=new_model)
+        cls.helpers.save_finetuned_model(
+            model=trainer.model, tokenizer=trainer.tokenizer, model_name=new_model
+        )
