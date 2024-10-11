@@ -97,7 +97,7 @@ def main(
     task = "sentiment_analysis"  # "yes_no_question"
     print(f"\n[Started] - Running downstream model on {task}")
     epochs = 10
-    learning_rate = 0.001  # 0.002 is making a huge difference
+    learning_rate = 0.0001  # 0.002 is making a huge difference for sentiment, 0.0001 for yes no question.
     for SIGMA in np.arange(0.1, 0.6, 0.1):
         metrics_base = Execute(
             debug, epochs=epochs, SIGMA=SIGMA, learning_rate=learning_rate
@@ -126,4 +126,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(debug=True, extract=False, save_data_in_local=True, finetune=False)
+    main(debug=True, extract=True, save_data_in_local=True, finetune=True)
