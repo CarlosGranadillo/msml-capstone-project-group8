@@ -39,6 +39,7 @@ class Embeddings:
         cls.use_finetuned_model = use_finetuned_model
         cls.enable_logging = enable_logging
         cls.device = cls.config.get_device()
+        cls.seed = 0
 
     @classmethod
     def extract(cls, datasets, bert: bool, roberta: bool, llama2: bool) -> dict:
@@ -51,7 +52,7 @@ class Embeddings:
             message=f"\n[Started] - Embeddings extraction.",
             enable_logging=cls.enable_logging,
         )
-        cls.helpers.set_seed(seed=0)
+        cls.helpers.set_seed(cls.seed)
         for dataset_name, dataset in datasets.items():
             sentences = dataset["text"]
             labels = dataset["label"]

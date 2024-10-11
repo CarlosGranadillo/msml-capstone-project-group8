@@ -44,7 +44,7 @@ class Preprocess:
         cls.temp_datasets = {}
         cls.enable_logging = enable_logging
         cls.fine_tune_split_size = 0.30
-        cls.seed = 42
+        cls.seed = 0
 
     @classmethod
     def load_datasets(cls) -> dict:

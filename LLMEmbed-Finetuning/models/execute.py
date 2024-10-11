@@ -39,6 +39,7 @@ class Execute:
         cls.lr = learning_rate
         cls.device = f"cuda:{cls.cuda_no}" if torch.cuda.is_available() else "cpu"
         cls.class_num_dict = cls.config.get_no_of_classes()
+        cls.seed = 0
 
     @classmethod
     def train_multi_class(cls, dataloader, model, loss_fn, optimizer, task):
@@ -212,7 +213,7 @@ class Execute:
         The method executes the classification tasks and returns the validation metrics respectively.
         """
         torch.cuda.empty_cache()
-        cls.helpers.set_seed(seed=0)
+        cls.helpers.set_seed(cls.seed)
         logger = cls.log
         logger.log(
             message="\n[Started] - Model Execution",
