@@ -1,4 +1,4 @@
-# LLMEmbed Finetuning on finance data classification task.
+# LLMEmbed Finetuning for classification tasks on finance data.
 Repository containing all code and implementation files related to LLMEmbed.
 * The tasks performed in this project are `sentiment analysis` and `yes no question`.
 * All the results and processes are carried out seperately for both the tasks.
