@@ -10,19 +10,23 @@ Repository containing all code and implementation files related to Group 8's cap
 `[dataload]` -> `[preprocess]` -> `[embedding extraction (base llm's)]` -> `[fine tune llm's]` -> `[embedding extraction (finetuned llm's)]` -> `[run downstream model on both embeddings]` -> `[compare model resuts]`
 
 # run steps
-1. set the following boolean values according to the tasks below
-    ## embeddings extraction using base models
+1. set the following boolean values according to the tasks below as the `main` function parameters
+    ### embeddings extraction using base models
     a. set `extract = True` to extract the embeddings
 
-    ## preprocessing data while embeddings extraction
+    ### preprocessing data and embeddings extraction
     a. save the preprocessed data in the local : `save_data_in_local = True` else `False`
-    b. read the preprocessed data from the local and extract the embeddings :  `read_data_from_local = True` else `False` to preprocess the data from hugging face and extract the embeddings.
+
+    b. preprocessed the data and extract the embeddings :  `read_data_from_local = False` to preprocess the data from hugging face and extract the embeddings.
+
     c. extract emebeddings using base llm models : `use_finetuned_model = False` 
 
-    ## finetune the llm models
+    ### finetune the llm models
     a. set `fintune = True` to finetune the base models, additionally choose which model to fine tune by passing boolean values to `bert`, `roberta` and `llama2` parameters.
 
-    ## embeddings extraction using finetuned models
+    ### embeddings extraction using finetuned models
     a. set `extract = True` to extract the embeddings 
-    b. b. read the preprocessed data from the local and extract the embeddings :  `read_data_from_local = True` else `False` to preprocess the data from hugging face and extract the embeddings.
+
+    b. read the preprocessed data from the local and extract the embeddings :  `read_data_from_local = True` else `False` to preprocess the data from hugging face and extract the embeddings.
+    
     c. extract emebeddings using finetuned llm models : `use_finetuned_model = True`

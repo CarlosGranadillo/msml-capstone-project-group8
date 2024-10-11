@@ -7,6 +7,8 @@ import os
 import shutil
 import torch
 from datasets import Dataset, concatenate_datasets, load_from_disk
+import random
+import torch
 
 # Local Imports
 from config import Config
@@ -86,7 +88,6 @@ class Helpers:
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         dataset.save_to_disk(file_path)
-            
 
     @classmethod
     def save_finetuned_model(cls, model, tokenizer, model_name: str):
@@ -129,16 +130,32 @@ class Helpers:
             print(f"Cache directory: '{cache_dir}' cleared successfully.")
         else:
             print(f"Cache directory: '{cache_dir}' does not exist.")
-    
+
     @classmethod
-    def save_model_results(cls, df, finetuned : bool, filename : str):
+    def save_model_results(cls, df, finetuned: bool, filename: str, task: str):
         """
         This method will save the dataset to a local folder inorder to reuse.
         """
         save_path = cls.config.get_base_path() + "results/"
         folder = "finetuned/" if finetuned else "base/"
-        file_path = save_path + folder
+        file_path = save_path + folder + task + "/"
         if not os.path.exists(file_path):
             os.makedirs(file_path)
         df.to_csv(file_path + f"{filename}.csv")
         print("Saved at :", file_path + f"{filename}.csv")
+
+    @classmethod
+    def set_seed(cls, seed: int):
+        """
+        This function sets the seed for all the execution.
+        """
+        # Set the seed for random number generation in Python
+        random.seed(seed)
+
+        # Set the seed for PyTorch on CPU
+        torch.manual_seed(seed)
+
+        # Set the seed for PyTorch on all GPUs (if using multiple GPUs)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)  # if using multi-GPU

@@ -133,4 +133,6 @@ class RobertaFineTune:
         print(f"Time taken for finetuning of bert on {task}: {formatted_time}")
 
         new_model = f"{cls.finetuned_model_name}-{task}"
-        cls.helpers.save_finetuned_model(model=model, tokenizer=tokenizer, model_name=new_model)
+        cls.helpers.save_finetuned_model(
+            model=model, tokenizer=tokenizer, model_name=new_model
+        )

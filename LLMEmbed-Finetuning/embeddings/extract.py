@@ -41,17 +41,17 @@ class Embeddings:
         cls.device = cls.config.get_device()
 
     @classmethod
-    def extract(cls, datasets, bert : bool, roberta : bool, llama2 : bool) -> dict:
+    def extract(cls, datasets, bert: bool, roberta: bool, llama2: bool) -> dict:
         """
         This method extracts the embeddings using the LLM's.
         Extracting embeddings for only sentiment_analysis and yes_no_question from the dataset.
         Extraction will not be performed on the fine tuning datasets.
         """
         cls.log.log(
-                message=f"\n[Started] - Embeddings extraction.",
-                enable_logging=cls.enable_logging,
+            message=f"\n[Started] - Embeddings extraction.",
+            enable_logging=cls.enable_logging,
         )
-
+        cls.helpers.set_seed(seed=0)
         for dataset_name, dataset in datasets.items():
             sentences = dataset["text"]
             labels = dataset["label"]
@@ -150,6 +150,6 @@ class Embeddings:
                 )
 
         cls.log.log(
-                message=f"[Completed] - Embeddings extraction.",
-                enable_logging=cls.enable_logging,
+            message=f"[Completed] - Embeddings extraction.",
+            enable_logging=cls.enable_logging,
         )

@@ -93,7 +93,7 @@ class BertFineTune:
         model = model.to(cls.device)
         # Optimizer and scheduler
         optimizer = AdamW(model.parameters(), lr=2e-5, eps=1e-8)
-        
+
         total_steps = len(tensor_dataset) * 3  # 3 epochs
         scheduler = get_linear_schedule_with_warmup(
             optimizer, num_warmup_steps=0, num_training_steps=total_steps
@@ -131,8 +131,9 @@ class BertFineTune:
         minutes = int(elapsed_time // 60)
         seconds = int(elapsed_time % 60)
         formatted_time = f"{minutes:02}:{seconds:02}"
-        print(f"Time taken for finetuning of bert on {task}: {formatted_time}")    
+        print(f"Time taken for finetuning of bert on {task}: {formatted_time}")
 
         new_model = f"{cls.finetuned_model_name}-{task}"
-        cls.helpers.save_finetuned_model(model=model, tokenizer=tokenizer, model_name=new_model)
-
+        cls.helpers.save_finetuned_model(
+            model=model, tokenizer=tokenizer, model_name=new_model
+        )

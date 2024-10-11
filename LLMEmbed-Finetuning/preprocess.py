@@ -52,7 +52,9 @@ class Preprocess:
         This method will load the datasets and save in a dictionary as key value pair.
         """
         datasets = {}
-        datasets["sujet_finance"] = load_dataset("sujet-ai/Sujet-Finance-Instruct-177k")["train"]
+        datasets["sujet_finance"] = load_dataset(
+            "sujet-ai/Sujet-Finance-Instruct-177k"
+        )["train"]
         return datasets
 
     @classmethod
@@ -212,7 +214,7 @@ class Preprocess:
                 enable_logging=cls.enable_logging,
             )
             cls.log.log(
-                message="\t[Completed] - Sentiment Analysis conversion for {dataset_name} dataset.",
+                message=f"\t[Completed] - Sentiment Analysis conversion for {dataset_name} dataset.",
                 enable_logging=cls.enable_logging,
             )
 
@@ -230,7 +232,7 @@ class Preprocess:
                 enable_logging=cls.enable_logging,
             )
             cls.log.log(
-                message="\t[Completed] - Yes/No conversion for {dataset_name} dataset.",
+                message=f"\t[Completed] - Yes/No conversion for {dataset_name} dataset.",
                 enable_logging=cls.enable_logging,
             )
         return datasets
@@ -418,7 +420,7 @@ class Preprocess:
                 message="[Completed] - Perform exploding the rows for yes no question dataset.",
                 enable_logging=cls.enable_logging,
             )
-            
+
             # 9. Create seperate datasets for fine tuning and normal flow.
             logger.log(
                 message="\n[Started] - Create seperate datasets for fine tuning and normal flow.",
