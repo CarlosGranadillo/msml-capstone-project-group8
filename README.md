@@ -1,10 +1,12 @@
-# LLMEmbed
+# LLMEmbed Finetuning on finance data classification task.
 Repository containing all code and implementation files related to LLMEmbed.
+* The tasks performed in this project are `sentiment analysis` and `yes no question`.
+* All the results and processes are carried out seperately for both the tasks.
+
 
 # Code setup
-1. Clone the repository from the url - https://github.com/CarlosGranadillo/msml-capstone-project-group8.git.
-2. Run the following command `python main.py` or `python3 main.py`.
-3. The tasks performed in this project are `sentiment analysis` and `yes no question`
+* Clone the repository from the url - https://github.com/CarlosGranadillo/msml-capstone-project-group8.git.
+* Run the following command `python main.py` or `python3 main.py`.
 
 # Code flow
 `dataload` -> `preprocess` -> `embedding extraction (base llm's)` -> `fine tune llm's` -> `embedding extraction (finetuned llm's)` -> `run downstream model on both embeddings` -> `compare model resuts`
