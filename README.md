@@ -40,7 +40,7 @@ python main.py
 ```
 Alternatively:
 ```bash
-python main.py
+python3 main.py
 ```
 
 ## Code Flow
