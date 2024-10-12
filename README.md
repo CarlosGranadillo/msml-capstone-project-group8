@@ -37,6 +37,7 @@ Windows:
 ```bash
 .\your_environment_name\Scripts\activate
 ```
+Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
