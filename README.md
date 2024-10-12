@@ -69,3 +69,15 @@ Set the following boolean values according to the tasks below as the `main` func
 * Read the preprocessed data from local storage and extract the embeddings: `read_data_from_local = True` else `False` to preprocess the data from Hugging Face and extract the embeddings
 * Extract embeddings using fine-tuned LLM models: `use_finetuned_model = True`
 
+
+## Important Considerations
+
+1. **Computational Resources**  
+   Below are the specifications of the compute resources used to execute this project's code:  
+   ![gpu_resources](images/compute.jpeg)
+
+2. **Hugging Face Access Token**  
+   The LLaMA2 model is gated on the Hugging Face hub. To download the required files for this model and execute the project, you will need appropriate access. This involves a two-step process:
+   - Fill out the form on the LLaMA2 model card on Hugging Face.
+   - Create an access token on the Hugging Face platform.
+
