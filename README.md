@@ -87,13 +87,14 @@ Set the following boolean values according to the tasks below as the `main` func
 
 1. **Computational Resources**  
    Below are the specifications of the compute resources used to execute this project's code:
+   
    GPU : `NVIDIA A100 40GB`.
 
    ![gpu_resources](images/compute.jpeg)
 
-2. **Hugging Face Access Token**  
+3. **Hugging Face Access Token**  
    The LLaMA2 model is gated on the Hugging Face hub. To download the required files for this model and execute the project, you will need appropriate access. This involves a two-step process:
    - Fill out the form on the LLaMA2 model card on Hugging Face.
    - Create an access token on the Hugging Face platform.
-   - Save the token in `get_hugging_face_token()` function in `cofig.py`.
+   - Save the token in `get_hugging_face_token()` function in `config.py`.
 
