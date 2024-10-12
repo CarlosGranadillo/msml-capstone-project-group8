@@ -1,11 +1,11 @@
 """
-    This module contains the logger class
+    This module contains the logger class.
 """
 
 
 class Logger:
     """
-    This class contains all the methods used for logging
+    This class contains all the methods used for logging.
     """
 
     @classmethod

@@ -14,7 +14,6 @@ from transformers import (
     RobertaTokenizer,
 )
 
-
 # Local Imports
 from config import Config
 from helpers import Helpers

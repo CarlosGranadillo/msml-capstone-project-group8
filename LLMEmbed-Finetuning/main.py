@@ -1,5 +1,5 @@
 """
-    This is the main module
+    This is the main module which serves as the starting point of the programme.
 """
 
 # Local Imports
@@ -12,12 +12,10 @@ from helpers import Helpers
 from config import Config
 
 # General Imports
-import os
 import warnings
 import torch
 import pandas as pd
 import numpy as np
-
 
 warnings.filterwarnings("ignore")
 
@@ -31,12 +29,14 @@ def main(
     """
     This method is the starting point for the project. It performs the following tasks -
         1. Preprocess the datasets.
-            -> Loading the datasets, filtering, null checks, drop duplicate rows, selecting required columns, renaming columns, datasets seggregation, column values conversion.
+            -> Loading the datasets, filtering, null checks, drop duplicate rows, 
+            -> Selecting required columns, renaming columns, datasets seggregation, column values conversion.
         2. Extract embeddings from the datasets using the base LLM's.
         3. Finetune the LLM models.
         4. Extract embeddings from the datasets using the finetuned LLM's.
-        5. Run the base downstream model on the extracted finetuned embeddings for the results.
+        5. Run the base downstream model on the extracted base and finetuned embeddings for the results.
         6. Compare the results.
+        7. Aggregrate the results for visualisation.
     """
     # Clear CUDA Cache
     print("Clearing CUDA Cache")
@@ -93,59 +93,40 @@ def main(
         print("\n","-" * 30,"Skipping Preprocessing and Embeddings extraction using finetuned LLM's","-" * 10)
 
     # 5. Run the downstream model on the extracted embeddings for the tasks
-    learning_rates = {
-        "sentiment_analysis": [0.001, 0.002, 0.0001],
-        "yes_no_question": [0.001, 0.0001, 0.0002],
-    }
-    tasks = ["sentiment_analysis", "yes_no_question"]
-    epochs = [10, 25, 50, 75, 100]
-    SIGMA_values = np.arange(0.1, 0.6, 0.1)
+    tasks, learning_rates, epochs, SIGMA_values = Config().get_downstream_model_parameters()
     for task in tasks:
         for epoch in epochs:
             for lr in learning_rates[task]:
                 for SIGMA in SIGMA_values:
                     SIGMA = round(SIGMA, 1)
-                    print(
-                        f"\n[Started] - Running downstream model on {task} with parameters : [epoch : {epoch}, lr : {lr}, SIGMA : {SIGMA}]"
-                    )
-                    folder = f"EPOCH={epoch}/LR={lr}/SIGMA={SIGMA}"
-                    filename = f"/metrics"
-                    metrics_base = Execute(
-                        debug, epochs=epoch, SIGMA=SIGMA, learning_rate=lr
-                    ).execute(use_finetuned_embeddings=False, task=task)
-                    metrics_base_df = pd.DataFrame.from_dict(
-                        metrics_base, orient="index"
-                    )
-
-                    metrics_finetuned = Execute(
-                        debug, epochs=epoch, SIGMA=SIGMA, learning_rate=lr
-                    ).execute(use_finetuned_embeddings=True, task=task)
-                    metrics_finetuned_df = pd.DataFrame.from_dict(
-                        metrics_finetuned, orient="index"
-                    )
-
-                    Helpers().save_model_results(
-                        df=metrics_base_df,
-                        finetuned=False,
-                        filename=filename,
-                        folder=folder,
-                        task=task,
-                    )
-                    Helpers().save_model_results(
-                        df=metrics_finetuned_df,
-                        finetuned=True,
-                        filename=filename,
-                        folder=folder,
-                        task=task,
-                    )
-                    # 6. Compare the results.
-                    print("Metrics for Base LLM's :")
-                    print(metrics_base_df)
-                    print("-" * 100)
-                    print("Metrics for Finetuned LLM's :")
-                    print(metrics_finetuned_df)
-                    print(f"\n[Started] - Running downstream model on {task} with parameters : [epoch : {epoch}, lr : {lr}, SIGMA : {SIGMA}]")
-
+                    for use_finetuned_embeddings in [False, True]:
+                        type = "finetuned" if use_finetuned_embeddings else "base"
+                        print(
+                            f"\n[Started] - Run downstream model on {task} with parameters : [epoch : {epoch}, lr : {lr}, SIGMA : {SIGMA}] using {type} embeddings."
+                        )
+                        folder = f"EPOCH={epoch}/LR={lr}/SIGMA={SIGMA}"
+                        filename = f"/metrics"
+                        metrics= Execute(
+                            debug, epochs=epoch, SIGMA=SIGMA, learning_rate=lr
+                        ).execute(use_finetuned_embeddings=use_finetuned_embeddings, task=task)
+                        metrics_df = pd.DataFrame.from_dict(
+                            metrics, orient="index"
+                        )
+                        # 6. Compare results.
+                        print(f"Metrics using {type} LLM's :\n{metrics_df}")
+                        Helpers().save_model_results(
+                            df=metrics_df,
+                            finetuned=use_finetuned_embeddings,
+                            filename=filename,
+                            folder=folder,
+                            task=task,
+                        )
+                        print(
+                            f"[Completed] - Run downstream model on {task} with parameters : [epoch : {epoch}, lr : {lr}, SIGMA : {SIGMA}] using {type} embeddings."
+                        )
+    # 7. Aggregate results for better visualisation.
+    Helpers().aggregate_results_sentiment_analysis()
+    Helpers().aggregate_results_yes_no_question()
 
 if __name__ == "__main__":
-    main(debug=True, extract=True, save_data_in_local=True, finetune=True)
+    main(debug=True, extract=False, save_data_in_local=True, finetune=False)

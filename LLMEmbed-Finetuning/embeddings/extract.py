@@ -27,7 +27,7 @@ class Embeddings:
     @classmethod
     def __init__(cls, enable_logging: bool, use_finetuned_model: bool):
         """
-        This method initializes the dictionary to save the datasets.
+        This method initializes objects and the dictionary to save the datasets.
         """
         cls.config = Config()
         cls.helpers = Helpers()

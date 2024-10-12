@@ -22,11 +22,11 @@ from collections import defaultdict
 
 class Execute:
     """
-    This class contains the methods execute the models. It returns the valication metrics
+    This class contains the methods execute the models. It returns the valication metrics.
     """
 
     @classmethod
-    def __init__(cls, enable_logging, epochs, SIGMA, learning_rate):
+    def __init__(cls, enable_logging : bool, epochs : int, SIGMA : float, learning_rate : float):
         cls.log = Logger()
         cls.config = Config()
         cls.helpers = Helpers()
@@ -42,7 +42,7 @@ class Execute:
         cls.seed = 0
 
     @classmethod
-    def train_multi_class(cls, dataloader, model, loss_fn, optimizer, task):
+    def train_multi_class(cls, dataloader, model, loss_fn, optimizer, task : str):
         """
         This method executes the models on train data for multi-class classification.
         """
@@ -87,7 +87,7 @@ class Execute:
         )
 
     @classmethod
-    def test_multi_class(cls, dataloader, model, loss_fn, task):
+    def test_multi_class(cls, dataloader, model, loss_fn, task : str):
         """
         This method executes the models on test data for multi-class classification.
         """
@@ -129,7 +129,7 @@ class Execute:
         cls.validation_metrics[f"{task}_test"]["macro_f1"] = round(macro_f1, 4)
 
     @classmethod
-    def train(cls, dataloader, model, loss_fn, optimizer, task):
+    def train(cls, dataloader, model, loss_fn, optimizer, task : str):
         """
         This method executes the models on train data for binary classification.
         """
@@ -169,7 +169,7 @@ class Execute:
         cls.validation_metrics[f"{task}_train"]["f1_score"] = round(np.mean(f1_list), 4)
 
     @classmethod
-    def test(cls, dataloader, model, loss_fn, task):
+    def test(cls, dataloader, model, loss_fn, task : str):
         """
         This method executes the models on test data for binary classification.
         """
@@ -267,7 +267,7 @@ class Execute:
         )
         if class_num > 2:
             logger.log(
-                message=f"\n[Started] - {task} - Training",
+                message=f"\n[Started] - {task} - Training.",
                 enable_logging=cls.enable_logging,
             )
             for epoch in range(cls.epochs):
@@ -283,23 +283,23 @@ class Execute:
                     task=task,
                 )
             logger.log(
-                message=f"[Completed] - {task} - Training",
+                message=f"[Completed] - {task} - Training.",
                 enable_logging=cls.enable_logging,
             )
             logger.log(
-                message=f"\n[Started] - {task} - Testing",
+                message=f"\n[Started] - {task} - Testing.",
                 enable_logging=cls.enable_logging,
             )
             cls.test_multi_class(
                 dataloader=test_loader, model=model, loss_fn=loss_fn, task=task
             )
             logger.log(
-                message=f"[Completed] - {task} - Testing",
+                message=f"[Completed] - {task} - Testing.",
                 enable_logging=cls.enable_logging,
             )
         elif class_num == 2:
             logger.log(
-                message=f"\n[Started] - {task} - Training",
+                message=f"\n[Started] - {task} - Training.",
                 enable_logging=cls.enable_logging,
             )
             for epoch in range(cls.epochs):
@@ -315,21 +315,21 @@ class Execute:
                     task=task,
                 )
             logger.log(
-                message=f"[Completed] - {task} - Training",
+                message=f"[Completed] - {task} - Training.",
                 enable_logging=cls.enable_logging,
             )
             logger.log(
-                message=f"\n[Started] - {task} - Testing",
+                message=f"\n[Started] - {task} - Testing.",
                 enable_logging=cls.enable_logging,
             )
             cls.test(dataloader=test_loader, model=model, loss_fn=loss_fn, task=task)
             logger.log(
-                message=f"[Completed] - {task} - Testing",
+                message=f"[Completed] - {task} - Testing.",
                 enable_logging=cls.enable_logging,
             )
 
         logger.log(
-            message="[Completed] - Model Execution",
+            message="[Completed] - Model Execution.",
             enable_logging=cls.enable_logging,
         )
 
