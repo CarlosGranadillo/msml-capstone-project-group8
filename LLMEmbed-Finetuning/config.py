@@ -4,6 +4,7 @@
 
 # General Imports
 import torch
+import numpy as np
 
 
 class Config:
@@ -82,7 +83,7 @@ class Config:
         """
         This function returns the path for the embeddings to be stored.
         """
-        path = "/home/exouser/Desktop/msml-group8-code-base/"  # change it to a desired path
+        path = "/home/exouser/Desktop/msml-group8-code-base/"  # change it to a desired path.
         return path
 
     @classmethod
@@ -99,7 +100,7 @@ class Config:
         r_path = (
             base_path + f"roberta_embeddings/{task}/dataset_tensors/{mode}_texts.pt"
         )
-        # labels will remain same for all the extractions
+        # labels will remain same for all the extractions.
         labels_path = (
             base_path + f"llama2_embeddings/{task}/dataset_tensors/{mode}_labels.pt"
         )
@@ -110,7 +111,7 @@ class Config:
         """
         This function returns the path for the embeddings to be stored.
         """
-        token = "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"  # change it to the user token
+        token = "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"  # change it to the user token.
         return token
 
     @classmethod
@@ -139,7 +140,23 @@ class Config:
     @classmethod
     def get_no_of_classes(cls) -> dict:
         """
-        This function return the number of classes per task
+        This function returns the number of classes per task.
         """
         classes = {"sentiment_analysis": 5, "yes_no_question": 2}
         return classes
+    
+    @classmethod
+    def get_downstream_model_parameters(cls) -> tuple:
+        """
+        This function returns model parameters to run the downsteam model.
+        """
+        learning_rates = {
+        "sentiment_analysis": [0.001, 0.002, 0.0001],
+        "yes_no_question": [0.001, 0.0001, 0.0002],
+        }
+        tasks = cls.get_selected_task_types()
+        epochs = [10, 25, 50, 75]
+        SIGMA_values = np.arange(0.1, 0.6, 0.1)
+
+        return tasks, learning_rates, epochs, SIGMA_values
+

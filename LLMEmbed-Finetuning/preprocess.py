@@ -1,5 +1,5 @@
 """
-    This module contains the Preprocess class
+    This module contains the Preprocess class.
 """
 
 # Local Imports

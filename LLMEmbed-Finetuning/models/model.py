@@ -54,7 +54,7 @@ class DownstreamModel(nn.Module):
             split_tensor = split_tensor.reshape(batch_size, -1)
             input.append(self.compress_layers[i](split_tensor))
 
-        # Pad BERT and RoBERTa embeddings to match Llama2 (1024)
+        # Pad BERT and RoBERTa embeddings to match Llama2 size(1024)
         input_b = F.pad(input_b, (0, 1024 - input_b.shape[1]))
         input_r = F.pad(input_r, (0, 1024 - input_r.shape[1]))
 
@@ -198,7 +198,7 @@ class LLM:
                 enable_logging=cls.enable_logging,
             )
             tokenizer.pad_token = tokenizer.eos_token
-            # Load the base model to merge with the peft finetuned model
+            # Load the base model to merge with the peft finetuned model.
             base_model = AutoModelForCausalLM.from_pretrained(
                 cls.llama2_model_name,
                 config=model_config,

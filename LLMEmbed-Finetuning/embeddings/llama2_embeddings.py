@@ -9,20 +9,19 @@ from helpers import Helpers
 from models.model import LLM
 
 # General Imports
-import os
 import torch
 from tqdm import trange
 
 
 class Llama2:
     """
-    This class contains the methods to extract the embeddings using Bert
+    This class contains the methods to extract the embeddings using Llama2.
     """
 
     @classmethod
     def __init__(cls, enable_logging: bool, use_finetuned_model: bool):
         """
-        This method initialized the variables that are used in this class
+        This method initialized the variables that are used in this class.
         """
         cls.config = Config()
         cls.helpers = Helpers()

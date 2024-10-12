@@ -1,5 +1,5 @@
 """
-    This module contains the class to read the data (embeddings)
+    This module contains the class to read the data (embeddings).
 """
 
 # General Imports

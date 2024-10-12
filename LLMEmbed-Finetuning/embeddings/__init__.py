@@ -1,5 +1,5 @@
 """
-    __init__.py file, for making the folder as package.
+    __init__.py file, for making this folder as package.
 """
 
 # Local imports
