@@ -155,7 +155,7 @@ class Config:
         "yes_no_question": [0.001, 0.0001, 0.0002],
         }
         tasks = cls.get_selected_task_types()
-        epochs = [10, 25, 50, 75]
+        epochs = [10, 25, 50, 75, 100]
         SIGMA_values = np.arange(0.1, 0.6, 0.1)
 
         return tasks, learning_rates, epochs, SIGMA_values
